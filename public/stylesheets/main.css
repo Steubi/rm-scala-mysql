@@ -1,0 +1,16 @@
+div[ng-app] { margin: 20px}
+
+form[editable-form] > div {margin: 10px 0;}
+
+
+.searchBox{
+		font-size: 12px;
+		width: 100;
+	}
+
+
+
+.rmTable{
+	font-size: 12px;
+	border-color: white;
+}

@@ -1,0 +1,179 @@
+<html>
+	<head>
+		<title>Resources - Resources Management</title>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+	    <script type="text/javascript" src="http://vitalets.github.io/angular-xeditable/dist/js/xeditable.js"></script>
+	    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	    <link rel="stylesheet" type="text/css" href="http://vitalets.github.io/angular-xeditable/dist/css/xeditable.css">
+	    <script type="text/javascript" src="http://code.angularjs.org/1.0.8/angular-resource.js"></script>
+	  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	  	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.js"></script>
+
+	  	<script type="text/javascript">
+	  		var app = angular.module("app", ["xeditable", "ngResource"]);
+
+		
+
+			app.run(function(editableOptions) {
+				editableOptions.theme = 'bs3';
+			});
+
+
+
+			app.controller('Ctrl', function($scope, $filter, $http) {
+
+				//Define constants
+				$scope.locations = ["Chicago","Francfort","Madrid","Miami","Nice","Waltham"];
+				$scope.role = ["Data Scientist","Pre Sales","Sales","Solution Manager"]
+
+
+				//Get the list of resources
+				$http.get('\getAllResources')
+       				.then(function(res){
+          				$scope.resources = res.data;
+        		});
+
+
+       			$scope.saveResource = function(data, index) {
+					//$scope.project not updated yet
+					//angular.extend(data, {id: id});
+					data.estimatedSizing = parseInt(data.estimatedSizing)
+
+
+					return $http.post('/saveResource', data).
+						  success(function(dataResp, status, headers, config) {
+							//If it is a new resource which is saved, we need to read, and store, the id allocated to
+							// this new resource
+							if (data.id == -1){
+								data.id = dataResp.id;
+								$scope.resources.splice(index, 1);
+								$scope.resources.push(data);
+							}
+							
+						  }).
+						  error(function(dataResp, status, headers, config) {
+							// called asynchronously if an error occurs
+							// or server returns response with an error status.
+						  });
+				};
+
+				// add resource to table, the saveResource function will save it on the server
+				$scope.addResource = function() {
+					$scope.inserted = {
+						id: -1
+					};
+					$scope.resources.push($scope.inserted);
+				};
+
+				// remove resource
+				$scope.removeResource = function(pID,index) {
+					var req = {
+						 method: 'POST',
+						 url: '/deleteResource',
+						 headers: {'Content-Type': 'application/json'},
+						 data: {id: pID}
+					};
+					$http(req).success(function(){
+						$scope.resources.splice(index, 1);
+					}).error(function(){});
+				};
+
+			});
+	  	</script>
+
+	</head>
+	<body>
+		<nav class="navbar navbar-default">
+		  <div class="container-fluid">
+		    <div class="navbar-header">
+		    	<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+			        <span class="icon-bar"></span>
+			        <span class="icon-bar"></span>
+			        <span class="icon-bar"></span> 
+			    </button>
+		        <a class="navbar-brand">Resources Management</a>
+		    </div>
+		    <div class="collapse navbar-collapse" id="myNavbar">
+			    <ul class="nav navbar-nav">
+			        <li><a href="#">Home</a></li>
+			        <li><a href="/projects">Projects</a></li>
+			        <li class="active"><a>Resources</a></li> 
+			        <li><a href="#">Vacations</a></li> 
+			    </ul>
+		        <ul class="nav navbar-nav navbar-right">
+		            <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+		        </ul>
+		    </div>
+		  </div>
+		</nav>
+
+		<div class="row">
+			<div class="col-sm-12 col-md-10 col-lg-8">
+
+				<div ng-app="app" ng-controller="Ctrl" class="ng-scope">
+					<table class="table table-hover">
+				        <tr style="font-weight: bold">
+				            <td></td>
+				 			<td style="display:none;">ID</td>
+							<td>First Name</td>
+				            <td>Last Name</td>
+							<td>Location</td>
+							<td>Position</td>
+				            <td></td>
+				        </tr>
+				        <tr ng-repeat="resource in resources | orderBy:'firstName'">
+				            <td style="white-space: nowrap">
+				                <!-- form -->
+				                <form editable-form name="rowform" onbeforesave="saveResource($data, $index)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == resource">
+				                    <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary">
+				                        save
+				                    </button>
+				                    <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-default">
+				                        cancel
+				                    </button>
+				                </form>
+				                <div class="buttons" ng-show="!rowform.$visible">
+				                    <button class="btn btn-primary" ng-click="rowform.$show()"><span class="glyphicon glyphicon-pencil"></span></button>
+				                </div>
+				            </td>
+				            <td style="display:none;">
+										<span editable-text="resource.id" e-name="id" e-form="rowform">
+										{{ resource.id || 'empty' }}
+
+				            </td>
+				            <td>
+										<span editable-text="resource.firstName" e-name="firstName" e-form="rowform">
+										{{ resource.firstName || 'empty' }}
+
+				            </td>
+							<td>
+										<span editable-text="resource.lastName" e-name="lastName" e-form="rowform">
+										{{ resource.lastName || 'empty' }}
+
+				            </td>
+							<td>
+										<span editable-text="resource.location" e-name="location" e-form="rowform">
+										{{ resource.location || 'empty' }}
+
+				            </td>
+				            <td>
+										<span editable-text="resource.position" e-name="position" e-form="rowform">
+										{{ resource.position || 'empty' }}
+
+				            </td>
+
+				            <td style="white-space: nowrap">
+				                <div class="buttons" ng-show="!rowform.$visible">
+				                    <button class="btn btn-danger" ng-click="removeResource(resource.id,resources.indexOf(resource))"><span class="glyphicon glyphicon-trash"></span></button>
+				                </div>
+				            </td>
+				        </tr>
+				    </table>
+				    <button class="btn btn-default" ng-click="addResource()">Add row</button>
+				</div>
+			</div>
+
+		</div>
+	</body>
+</html>
