@@ -48,7 +48,7 @@ class Application extends Controller {
   }
 
   def projects = Action{
-    Ok(views.html.rm())
+    Ok(views.html.projects())
   }
 
   def deleteProject = Action.async(parse.json) { request =>
