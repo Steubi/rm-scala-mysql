@@ -477,59 +477,143 @@ object GraphEntry {
   }
 }
 
-case class ProjectDetails(id: Int, projectName: String, customerName: String, iataCode: String, highLevelScope:String,
- sizing: Int, resources: List[ProjectResourceSlots], var resourcesAllocatedMD: Float, graphEntry: GraphEntry){
+case class BankHoliday(id: Int, date: Date, name: String, location:String)
+
+object BankHoliday{
+
   /**
-   * Calculate current time allocation
+   * Parse a BankHoliday from a ResultSet
    */
-  def calculateTotalMDAllocated() = {
-    var earliestDate: Date = null
-    var latestDate: Date = null
-
-    resources.map { resource =>
-      
-      if (earliestDate==null){
-        earliestDate = resource.startDate
-        latestDate = resource.endDate
-      }
-      else{
-        if (earliestDate.compareTo(resource.startDate) > 0 ) earliestDate = resource.startDate
-        if (latestDate.compareTo(resource.endDate) < 0) latestDate = resource.endDate
-      }
-
- 
+  val bankHolidayParser = {
+    get[Int]("BANK_HOLIDAYS.ID") ~
+    get[Date]("BANK_HOLIDAYS.BANK_HOLIDAY_DATE") ~
+    get[String]("BANK_HOLIDAYS.NAME") ~
+    get[String]("BANK_HOLIDAYS.LOCATION") map {
+      case id~date~name~location => BankHoliday(id, date, name, location)
     }
-
-    //TODO: compare earliestDate and latest to wished dates to extand the range if necessary
-
-    var currentDate = earliestDate;
-    var numberOfDays = 0;
-    var numberOfMD: Float = 0;
-
-    while (currentDate.compareTo(latestDate) <= 0) {
-      numberOfDays = numberOfDays + 1
-
-      val cal = Calendar.getInstance();
-      cal.setTime(currentDate);
-      val dayOfWeek: Int = cal.get(Calendar.DAY_OF_WEEK);
-
-      if ((dayOfWeek > 1) && (dayOfWeek < 7)) //It's a working day... for Western countries at least
-        resources.map { resource =>
-            if ((currentDate.compareTo(resource.startDate) >= 0 ) && (currentDate.compareTo(resource.endDate) <= 0)) {
-              numberOfMD = numberOfMD + (resource.allocationPercentage.toFloat / 100)
-              
-            }
-
-        }
-
-      //Add one day to currentDate
-      cal.add(Calendar.DATE, 1); //minus number would decrement the days
-      currentDate = cal.getTime();
-      //End add one day to current date
-    }
-
-    resourcesAllocatedMD = numberOfMD
   }
+
+  /**
+   * Retrieve a BankHoliday from the id.
+   */
+  def findById(id: Integer): Option[BankHoliday] = {
+    DB.withConnection { implicit connection =>
+      SQL("select * from BANK_HOLIDAYS where ID = {id}").on('id -> id).as(bankHolidayParser.singleOpt)
+    }
+  }
+
+  /**
+   * Retrieve a BankHoliday from the date and location.
+   */
+  def findByDateAndLocation(date: Date, location: String): Option[BankHoliday] = {
+    DB.withConnection { implicit connection =>
+      SQL("select * from BANK_HOLIDAYS where BANK_HOLIDAY_DATE = {date} AND LOCATION = {location}").
+        on('date -> date, 'location -> location).as(bankHolidayParser.singleOpt)
+    }
+  }
+
+  /**
+   * Retrieve all BankHoliday
+   *
+   */
+  def listAll: List[BankHoliday]={
+    DB.withConnection { implicit connection =>
+      SQL("select * from BANK_HOLIDAYS").as(bankHolidayParser *)
+    }
+  }
+
+  /**
+   * Update a resource.
+   *
+   * @param resource The resource values.
+   */
+  def update(bankHoliday: BankHoliday) = {
+    DB.withConnection { implicit connection =>
+      SQL(
+        """
+          update BANK_HOLIDAYS
+          set BANK_HOLIDAY_DATE={date}, NAME={name}, LOCATION={location}
+          where ID = {id}
+        """
+      ).on(
+        'id -> bankHoliday.id,
+        'date -> bankHoliday.date,
+        'name -> bankHoliday.name,
+        'location -> bankHoliday.location
+      ).executeUpdate()
+    }
+  }
+
+  /**
+   * Insert a new resource.
+   *
+   * @param resource The resource values.
+   */
+  /*def insert(resource: Resource): Int = {
+
+    //Get new ID 
+    val currentMaxId = DB.withConnection { implicit connection =>
+      SQL("select MAX(ID) from RESOURCES").as(SqlParser.int("MAX(ID)").single)
+    }
+    
+    val newID = currentMaxId + 1
+
+    DB.withConnection { implicit connection =>
+      SQL(
+        """
+          insert into RESOURCES (
+            ID, FIRST_NAME, LAST_NAME, POSITION, LOCATION
+          ) values (
+            {id}, {firstName}, {lastName}, {position}, {location}
+          )
+        """
+      ).on(
+        'id -> newID,
+        'firstName -> resource.firstName,
+        'lastName -> resource.lastName,
+        'position -> resource.position,
+        'location -> resource.location
+      ).executeUpdate()
+    }
+
+    //Return the new ID
+    newID
+  }*/
+
+  /**
+   * Delete a BankHoliday.
+   *
+   * @param id Id of the BankHoliday to delete.
+   */
+  def delete(id: Int) = {
+    DB.withConnection { implicit connection =>
+      SQL("delete from BANK_HOLIDAYS where ID = {id}").on('id -> id).executeUpdate()
+    }
+  }
+
+  implicit val bankHolidayWrites = new Writes[BankHoliday] {
+    val format = new java.text.SimpleDateFormat("yyyy-MM-dd")
+    def writes(bankHoliday: BankHoliday) = Json.obj(
+      "id" -> bankHoliday.id,
+      "date" -> format.format(bankHoliday.date),
+      "name" -> bankHoliday.name,
+      "location" -> bankHoliday.location
+    )
+  }
+
+  implicit val bankHolidayReads: Reads[BankHoliday] = (
+  (JsPath \ "id").read[Int] and
+  (JsPath \ "date").read[Date] and
+  (JsPath \ "name").read[String] and
+  (JsPath \ "location").read[String]
+  )(BankHoliday.apply _)
+  
+}
+
+case class ProjectDetails(id: Int, projectName: String, customerName: String, iataCode: String, highLevelScope:String,
+ sizing: Int, resources: List[ProjectResourceSlots], var resourcesAllocatedMD: Float, graphEntry: GraphEntry,
+ bankHolidays: ListBuffer[BankHoliday]){
+
 
   /**
    * Create Graph and calculate time allocation?
@@ -590,15 +674,31 @@ case class ProjectDetails(id: Int, projectName: String, customerName: String, ia
         if ((dayOfWeek > 1) && (dayOfWeek < 7)) //It's a working day... for Western countries at least
           resources.map { resource =>
               if ((currentDate.compareTo(resource.startDate) >= 0 ) && (currentDate.compareTo(resource.endDate) <= 0)) {
-                // Calculate total number of MD for the project
-                numberOfMD = numberOfMD + (resource.allocationPercentage.toFloat / 100)
-                //Calculate daily allocation.
-                val personInGraphList = graphEntry.series.find(a => a.name == (resource.firstName+" "+resource.lastName))
-                personInGraphList match {
-                  case Some(person) => person
-                    person.data(numberOfDays-1) += (resource.allocationPercentage.toFloat / 100)
-                  case None => 
+                //Before we continue, we need to check if it is not a bank holiday where the resource work.
+                val bankHoliday = BankHoliday.findByDateAndLocation(currentDate,resource.location)
+
+                //Let's check the bankHoliday object, if it's empty, then all fine, else we can't increase the counters
+                // and we have to include it in the project details
+                bankHoliday match {
+                  case Some(myBankHoliday) => myBankHoliday
+                    //Add this bank holiday to the project details
+                    if (!bankHolidays.contains(myBankHoliday)) bankHolidays += myBankHoliday
+                  case None => {
+                    // No bank holiday, we can increase the counters
+                    // Calculate total number of MD for the project
+                    numberOfMD = numberOfMD + (resource.allocationPercentage.toFloat / 100)
+                    //Calculate daily allocation.
+                    val personInGraphList = graphEntry.series.find(a => a.name == (resource.firstName+" "+resource.lastName))
+                    personInGraphList match {
+                      case Some(person) => person
+                        person.data(numberOfDays-1) += (resource.allocationPercentage.toFloat / 100)
+                      case None => 
+                    }
+                  }
                 }
+
+
+                
 
               }
 
@@ -629,7 +729,7 @@ object ProjectDetails{
     get[Int]("PROJECTS.ESTIMATED_SIZING") map {
       case id~projectName~customerName~iataCode~highLevelScope~sizing =>
         ProjectDetails(id, projectName, customerName, iataCode, highLevelScope, sizing,
-          ProjectResourceSlots.findByProjectId(id), 0, GraphEntry(ListBuffer[String](),ListBuffer[Serie]()))
+          ProjectResourceSlots.findByProjectId(id), 0, GraphEntry(ListBuffer[String](),ListBuffer[Serie]()),ListBuffer[BankHoliday]())
     }
   }
 
@@ -654,7 +754,8 @@ object ProjectDetails{
       "sizing" -> project.sizing,
       "resources" -> project.resources,
       "resourcesAllocatedMD" -> project.resourcesAllocatedMD,
-      "graphEntry" -> project.graphEntry
+      "graphEntry" -> project.graphEntry,
+      "bankHolidays" -> project.bankHolidays
     )
   }
   
@@ -852,5 +953,7 @@ object Project{
   (JsPath \ "status").read[String]
   )(Project.apply _)
 }
+
+
 
 
