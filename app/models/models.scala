@@ -477,6 +477,51 @@ object GraphEntry {
   }
 }
 
+case class Vacation(id: Int, startDate: Date, endDate: Date, resourceID: Int, firstName: String, lastName: String, location: String)
+
+object Vacation {
+  /**
+   * Parse a BankHoliday from a ResultSet
+   */
+  val vacationParser = {
+    get[Int]("VACATIONS.ID") ~
+    get[Date]("VACATIONS.START_DATE") ~
+    get[Date]("VACATIONS.END_DATE") ~
+    get[Int]("VACATIONS.RESOURCE_ID") ~
+    get[String]("RESOURCES.FIRST_NAME") ~
+    get[String]("RESOURCES.LAST_NAME") ~
+    get[String]("RESOURCES.LOCATION") map {
+      case id~startDate~endDate~resourceID~firstName~lastName~location => Vacation(id, startDate, endDate, resourceID, firstName, lastName, location)
+    }
+  }
+
+  /**
+   * Retrieve a Vacations using a project id.
+   */
+  def findByProjectId(projectID: Integer): List[Vacation] = {
+    DB.withConnection { implicit connection =>
+      SQL("select VACATIONS.ID,VACATIONS.START_DATE,VACATIONS.END_DATE,VACATIONS.RESOURCE_ID, RESOURCES.FIRST_NAME, RESOURCES.LAST_NAME, RESOURCES.LOCATION from VACATIONS, SLOTS, RESOURCES WHERE SLOTS.PROJECT_ID={id} AND SLOTS.RESOURCE_ID=VACATIONS.RESOURCE_ID AND SLOTS.RESOURCE_ID = RESOURCES.ID AND ((VACATIONS.START_DATE >= SLOTS.START_DATE AND VACATIONS.START_DATE<= SLOTS.END_DATE) OR (VACATIONS.END_DATE >= SLOTS.START_DATE AND VACATIONS.END_DATE<= SLOTS.END_DATE));").
+        on('id -> projectID).as(vacationParser *)
+    }
+  }
+
+  implicit val vacationWrites = new Writes[Vacation] {
+    val format = new java.text.SimpleDateFormat("yyyy-MM-dd")
+    def writes(vacation: Vacation) = Json.obj(
+      "id" -> vacation.id,
+      "startDate" -> format.format(vacation.startDate),
+      "endDate" -> format.format(vacation.endDate),
+      "resourceID" -> vacation.resourceID,
+      "firstName" -> vacation.firstName,
+      "lastName" -> vacation.lastName,
+      "location" -> vacation.location
+    )
+  }
+
+}
+
+
+
 case class BankHoliday(id: Int, date: Date, name: String, location:String)
 
 object BankHoliday{
@@ -612,7 +657,7 @@ object BankHoliday{
 
 case class ProjectDetails(id: Int, projectName: String, customerName: String, iataCode: String, highLevelScope:String,
  sizing: Int, resources: List[ProjectResourceSlots], var resourcesAllocatedMD: Float, graphEntry: GraphEntry,
- bankHolidays: ListBuffer[BankHoliday]){
+ bankHolidays: ListBuffer[BankHoliday], vacations:List[Vacation]){
 
 
   /**
@@ -729,7 +774,7 @@ object ProjectDetails{
     get[Int]("PROJECTS.ESTIMATED_SIZING") map {
       case id~projectName~customerName~iataCode~highLevelScope~sizing =>
         ProjectDetails(id, projectName, customerName, iataCode, highLevelScope, sizing,
-          ProjectResourceSlots.findByProjectId(id), 0, GraphEntry(ListBuffer[String](),ListBuffer[Serie]()),ListBuffer[BankHoliday]())
+          ProjectResourceSlots.findByProjectId(id), 0, GraphEntry(ListBuffer[String](),ListBuffer[Serie]()),ListBuffer[BankHoliday](),Vacation.findByProjectId(id))
     }
   }
 
@@ -755,7 +800,8 @@ object ProjectDetails{
       "resources" -> project.resources,
       "resourcesAllocatedMD" -> project.resourcesAllocatedMD,
       "graphEntry" -> project.graphEntry,
-      "bankHolidays" -> project.bankHolidays
+      "bankHolidays" -> project.bankHolidays,
+      "vacations" -> project.vacations
     )
   }
   

@@ -14,6 +14,7 @@
   	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.js"></script>
   	<script src="http://code.highcharts.com/highcharts.js"></script>
 	<script src="http://code.highcharts.com/modules/exporting.js"></script>
+	<link rel="stylesheet" type="text/css" href="assets/stylesheets/main.css">
 
 	<!--<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>-->
 
@@ -260,30 +261,30 @@
 	
 
 		<div ng-app="app" ng-controller="Ctrl" class="ng-scope">
-			<h1>Project Details</h1>
+			<h3>Project Details</h3>
 			<br/>
 			<div class="row">
-				<div class="col-md-4">
-					<table class="table table-condensed projectTable" width="600">
+				<div class="col-md-6">
+					<table class="table table-bordered table-hover table-condensed rmTable" width="600">
 					    <tbody>
 					      <tr>
-					        <td class="mainSubject">Project Name:</td>
+					        <td style="font-weight: bold">Project Name:</td>
 					        <td>{{project.projectName}}</td>
 					      </tr>
 					      <tr>
-					        <td class="mainSubject">Customer Name:</td>
+					        <td style="font-weight: bold">Customer Name:</td>
 					        <td>{{project.customerName}}</td>
 					      </tr>
 					      <tr>
-					        <td class="mainSubject">High Level Scope:</td>
+					        <td style="font-weight: bold">High Level Scope:</td>
 					        <td>{{project.highLevelScope}}</td>
 					      </tr>
 					      <tr>
-					        <td class="mainSubject">Sizing:</td>
+					        <td style="font-weight: bold">Sizing:</td>
 					        <td>{{project.sizing}}</td>
 					      </tr>
 					      <tr>
-					        <td class="mainSubject">Resources Allocated (MD):</td>
+					        <td style="font-weight: bold">Resources Allocated (MD):</td>
 					        <td>{{project.resourcesAllocatedMD}}</td>
 					      </tr>
 					    </tbody>
@@ -291,8 +292,13 @@
 			    </div>
 			</div>
 			<div class="row" ng-repeat="bankHoliday in project.bankHolidays">
-				<div class="col-md-4 alert alert-info" role="alert">
+				<div class="col-md-8 col-sm-12 alert alert-info" role="alert">
 					INFO: There is a bank holiday in {{bankHoliday.location}} on the {{bankHoliday.date}}: {{bankHoliday.name}}
+				</div>
+			</div>
+			<div class="row" ng-repeat="vacation in project.vacations">
+				<div class="col-md-8 col-sm-12 alert alert-danger" role="alert">
+					WARNING: {{vacation.firstName}} is taking vacations from the {{vacation.startDate}} to the {{vacation.endDate}}
 				</div>
 			</div>
 
@@ -300,7 +306,7 @@
 			<br/>
 			<br/>
 
-		    <table class="table table-bordered table-hover toto">
+		    <table class="table table-bordered table-hover rmTable">
 		        <tr style="font-weight: bold">
 		            <td></td>
 		 			<td style="display:none;">Slot ID</td>
