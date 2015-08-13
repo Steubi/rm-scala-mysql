@@ -23,6 +23,7 @@ class Application extends Controller {
   def index = Action { 
 
   	Ok(views.html.rm_index())
+    //Ok(views.html.test())
     
   }
 

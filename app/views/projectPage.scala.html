@@ -36,32 +36,37 @@
 			app.controller('Ctrl', function($scope, $filter, $http) {
 
 				$scope.hideForm = true;
-				$scope.newResourceSlot = {slotID:-1,projectID:0,resourceID:0,startDate:"",endDate:"",allocationPercentage:100,slotDescription:""};
+				
 
-				var today = new Date();
-				var dd = today.getDate();
-				var mm = today.getMonth()+1; //January is 0!
-				var yyyy = today.getFullYear();
+				$scope.initNewResourceSlot = function () {
+					$scope.newResourceSlot = {slotID:-1,projectID:0,resourceID:0,startDate:"",endDate:"",allocationPercentage:100,slotDescription:""};
+					var today = new Date();
+					var dd = today.getDate();
+					var mm = today.getMonth()+1; //January is 0!
+					var yyyy = today.getFullYear();
 
-				if(dd<10) {
-				    dd='0'+dd
-				} 
+					if(dd<10) {
+					    dd='0'+dd
+					} 
 
-				if(mm<10) {
-				    mm='0'+mm
-				} 
+					if(mm<10) {
+					    mm='0'+mm
+					} 
 
-				$scope.newResourceSlot.startDate = yyyy+'-'+mm+'-'+dd;
-				$scope.newResourceSlot.endDate = $scope.newResourceSlot.startDate;
+					$scope.newResourceSlot.startDate = yyyy+'-'+mm+'-'+dd;
+					$scope.newResourceSlot.endDate = $scope.newResourceSlot.startDate;
 
+				};
 
+				$scope.initNewResourceSlot();
+
+				
 				$http.get('\projectDetails?projectID=@myProject')
 	       			.then(function(res){
 	          				$scope.project = res.data;
 	          				$scope.newResourceSlot.projectID = $scope.project.id
 	          				loadGraph();
 	        	});
-
 
 	       		$scope.user = {
 				    status: 2
@@ -218,6 +223,11 @@
 					$scope.hideForm = false;
 				};
 
+				$scope.cancelNewSlot = function() {
+					$scope.hideForm = true;
+					$scope.initNewResourceSlot();
+				};
+
 
 			});
 
@@ -261,9 +271,9 @@
 	
 
 		<div ng-app="app" ng-controller="Ctrl" class="ng-scope">
-			<h3>Project Details</h3>
+			<!--<h3>Project Details</h3>-->
 			<br/>
-			<div class="row">
+			<!--<div class="row">
 				<div class="col-md-6">
 					<table class="table table-bordered table-hover table-condensed rmTable" width="600">
 					    <tbody>
@@ -290,14 +300,61 @@
 					    </tbody>
 				    </table>
 			    </div>
+			</div>-->
+
+			<div class="row">
+				<div class="col-md-2">
+					<label>Project Name:</label>
+				</div>
+				<div class="col-md-4">
+					{{project.projectName}}
+				</div>
 			</div>
+			<div class="row">
+				<div class="col-md-2">
+					<label>Customer Name:</label>
+				</div>
+				<div class="col-md-4">
+					{{project.customerName}}
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2">
+					<label>High Level Scope:</label>
+				</div>
+				<div class="col-md-4">
+					{{project.highLevelScope}}
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2">
+					<label>Sizing:</label>
+				</div>
+				<div class="col-md-4">
+					{{project.sizing}}
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2">
+					<label>Resources Allocated (MD):</label>
+				</div>
+				<div class="col-md-4">
+					{{project.resourcesAllocatedMD}}
+				</div>
+			</div>
+			<br/>
+			<br/>
+
+
 			<div class="row" ng-repeat="bankHoliday in project.bankHolidays">
-				<div class="col-md-8 col-sm-12 alert alert-info" role="alert">
+				<div class="col-md-1"></div>
+				<div class="col-md-5 col-sm-9 alert alert-info" role="alert">
 					INFO: There is a bank holiday in {{bankHoliday.location}} on the {{bankHoliday.date}}: {{bankHoliday.name}}
 				</div>
 			</div>
 			<div class="row" ng-repeat="vacation in project.vacations">
-				<div class="col-md-8 col-sm-12 alert alert-danger" role="alert">
+				<div class="col-md-1"></div>
+				<div class="col-md-5 col-sm-9 alert alert-danger" role="alert">
 					WARNING: {{vacation.firstName}} is taking vacations from the {{vacation.startDate}} to the {{vacation.endDate}}
 				</div>
 			</div>
@@ -325,15 +382,15 @@
 		            <td style="white-space: nowrap">
 		                <!-- form -->
 		                <form editable-form name="rowform" onbeforesave="saveSlot($data, $index)" onaftersave="refreshSlots()" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == project">
-		                    <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary">
-		                        save
+		                    <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-success">
+		                        <span class="glyphicon glyphicon-ok">
 		                    </button>
-		                    <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-default">
-		                        cancel
+		                    <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-warning">
+		                        <span class="glyphicon glyphicon-remove">
 		                    </button>
 		                </form>
 		                <div class="buttons" ng-show="!rowform.$visible">
-		                    <button class="btn btn-primary" ng-click="rowform.$show()">edit</button>
+		                    <button class="btn btn-primary" ng-click="rowform.$show()"><span class="glyphicon glyphicon-pencil"></button>
 		                </div>
 		            </td>
 		            <td style="display:none;">
@@ -386,17 +443,22 @@
 
 		            <td style="white-space: nowrap">
 		                <div class="buttons" ng-show="!rowform.$visible">
-		                    <button class="btn btn-danger" ng-click="removeSlot(resource.slotID,$index)">del</button>
+		                    <button class="btn btn-danger" ng-click="removeSlot(resource.slotID,$index)"><span class="glyphicon glyphicon-trash"></span></button>
 		                </div>
 		            </td>
 		        </tr>
+		        <tr>
+		        	<td  style="border: none">
+			        	<button class="btn btn-primary" ng-hide="!hideForm" ng-click="showForm()"><span class="glyphicon glyphicon-plus"></button>
+					</td>
+		        </tr>
+
+
 	    	</table>
 
 		
 
-		<button class="btn btn-success" ng-hide="!hideForm" ng-click="showForm()">
-			<span class="glyphicon glyphicon-save"></span>  Create new slot
-		</button>
+		
 
 
 		<form editable-form class="form-horizontal" name="tableform" ng-hide="hideForm">
@@ -432,9 +494,18 @@
 		    </div>
 		  </div>
 
-		  <button class="btn btn-success" ng-disabled="newResourceSlot.resourceID == 0 || newResourceSlot.startDate > newResourceSlot.endDate" ng-click="saveNewSlot()">
-			<span class="glyphicon glyphicon-save"></span>  Save Changes
-		  </button>
+		  <div class="form-group">
+		  		<label class="col-sm-2 control-label"></label>
+		  		<div class="col-sm-10">
+					<button class="btn btn-warning" ng-click="cancelNewSlot()">
+						<span class="glyphicon glyphicon-remove"></span>
+					</button>
+
+					<button class="btn btn-success" ng-disabled="newResourceSlot.resourceID == 0 || newResourceSlot.startDate > newResourceSlot.endDate" ng-click="saveNewSlot()">
+						<span class="glyphicon glyphicon-save"></span>
+					</button>
+				</div>
+			</div>
 
 		</form>
 
