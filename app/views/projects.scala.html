@@ -16,14 +16,14 @@
 
 
 
-<script type="text/javascript">//<![CDATA[
+	<script type="text/javascript">//<![CDATA[
 		var app = angular.module("app", ["xeditable", "ngResource"]);
 		var myData = ""
 
 		
 		
 		app.run(function(editableOptions) {
-			editableOptions.theme = 'bs2';
+			editableOptions.theme = 'bs3';
 		});
 		app.controller('Ctrl', function($scope, $filter, $http) {
 			$scope.hideProjectsDetails = true;
@@ -326,4 +326,5 @@
 
 
 
-</body></html>
+</body>
+</html>

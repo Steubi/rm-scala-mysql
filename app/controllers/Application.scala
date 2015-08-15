@@ -8,13 +8,14 @@ import models._
 import play.api.libs.json._
 import java.util.{Date}
 import java.util.{Calendar}
+import java.text.{SimpleDateFormat}
 
 import scala.concurrent.Future
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 
-import org.joda.time.DateTime;
-import org.joda.time.Days;
+import scala.collection.mutable.ListBuffer
+
 
 
 
@@ -229,5 +230,34 @@ class Application extends Controller {
     Resource.delete(myID.as[Int])
     Future(Ok)
   }
+
+
+  def getAllResourcesActivity() = Action {
+    val slots = Slot.listAll
+    var currentDate = new SimpleDateFormat( "yyyyMMdd" ).parse( "20150101" )
+    val endDate = new SimpleDateFormat( "yyyyMMdd" ).parse( "20161231" )
+    val cal = Calendar.getInstance()
+    val calendarEntries = new ListBuffer[CalendarEntry]
+
+    while (currentDate.compareTo(endDate) <= 0) {
+      var totalAllocation: Float = 0
+      slots.map{ slot =>
+        if ((currentDate.compareTo(slot.startDate) >= 0 ) && (currentDate.compareTo(slot.endDate) <= 0)){
+          totalAllocation += (slot.allocationPercentage.toFloat / 100)
+        }
+      }
+
+      calendarEntries += new CalendarEntry(currentDate,totalAllocation)
+
+      cal.setTime(currentDate)
+      //Add one day to currentDate
+      cal.add(Calendar.DATE, 1)
+      currentDate = cal.getTime()
+    }
+
+    Ok(Json.toJson(calendarEntries).toString())
+  }
+
+
 
 }

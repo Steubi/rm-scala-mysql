@@ -184,6 +184,16 @@ object Slot{
   }
 
   /**
+   * Retrieve all resources
+   *
+   */
+  def listAll: List[Slot]={
+    DB.withConnection { implicit connection =>
+      SQL("select * from SLOTS").as(slotParser *)
+    }
+  }
+
+  /**
    * Update a slot.
    *
    * @param slot The project values.
@@ -731,7 +741,7 @@ case class ProjectDetails(id: Int, projectName: String, customerName: String, ia
                   case None => {
                     // No bank holiday, we can increase the counters
                     // Calculate total number of MD for the project
-                    numberOfMD = numberOfMD + (resource.allocationPercentage.toFloat / 100)
+                    numberOfMD += (resource.allocationPercentage.toFloat / 100)
                     //Calculate daily allocation.
                     val personInGraphList = graphEntry.series.find(a => a.name == (resource.firstName+" "+resource.lastName))
                     personInGraphList match {
@@ -1001,5 +1011,17 @@ object Project{
 }
 
 
+case class CalendarEntry(date: Date, value: Float)
 
+object CalendarEntry {
+    
 
+  implicit val calendarEntryWrites = new Writes[CalendarEntry] {
+    val format = new java.text.SimpleDateFormat("yyyy-MM-dd")
+    def writes(entry: CalendarEntry) = Json.obj(
+      "date" -> format.format(entry.date),
+      "value" -> entry.value
+    )
+  }
+
+}
