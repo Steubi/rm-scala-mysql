@@ -17,17 +17,19 @@
 	  stroke-width: 2px;
 	}
 
-	.RdYlGn .q0-11{fill:rgb(165,0,38)}
-	.RdYlGn .q1-11{fill:rgb(215,48,39)}
-	.RdYlGn .q2-11{fill:rgb(244,109,67)}
-	.RdYlGn .q3-11{fill:rgb(253,174,97)}
-	.RdYlGn .q4-11{fill:rgb(254,224,139)}
-	.RdYlGn .q5-11{fill:rgb(255,255,191)}
-	.RdYlGn .q6-11{fill:rgb(217,239,139)}
-	.RdYlGn .q7-11{fill:rgb(166,217,106)}
-	.RdYlGn .q8-11{fill:rgb(102,189,99)}
-	.RdYlGn .q9-11{fill:rgb(26,152,80)}
-	.RdYlGn .q10-11{fill:rgb(0,104,55)}
+	.RdYlGn .q0-11{fill:rgb(250,255,250)}
+	.RdYlGn .q1-11{fill:rgb(180,255,180)}
+	.RdYlGn .q2-11{fill:rgb(160,255,160)}
+	.RdYlGn .q3-11{fill:rgb(120,255,120)}
+	.RdYlGn .q4-11{fill:rgb(100,255,100)}
+	.RdYlGn .q5-11{fill:rgb(80,255,80)}
+	.RdYlGn .q6-11{fill:rgb(60,255,60)}
+	.RdYlGn .q7-11{fill:rgb(40,255,40)}
+	.RdYlGn .q8-11{fill:rgb(20,255,20)}
+	.RdYlGn .q9-11{fill:rgb(10,255,10)}
+	.RdYlGn .q10-11{fill:rgb(0,255,0)}
+	.RdylGn .q11-11{fill:rgb(255,128,0)}
+	.RdylGn .q12-11{fill:rgb(255,0,0)}
 
 	</style>
 
@@ -39,6 +41,7 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 		<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 		<script src="http://d3js.org/d3.v3.min.js"></script>
+	    <link rel="stylesheet" type="text/css" href="assets/stylesheets/main.css">
 
 		
 
@@ -68,10 +71,10 @@
 		    </div>
 		  </div>
 		</nav>
-
+		<h3>Resources Utilization (%)</h3>
 		<script type="text/javascript">
-
-			var myData = [{date: "2014-06-15", utilization: 40},{date: "2014-09-17", utilization: 30}];
+			//TODO: get nb of resources from table...
+			var nbResources = 6;
 
 			var width = 960,
 			    height = 136,
@@ -81,11 +84,13 @@
 			    format = d3.time.format("%Y-%m-%d");
 
 			var color = d3.scale.quantize()
-			    .domain([-.05, .05])
-			    .range(d3.range(11).map(function(d) { return "q" + d + "-11"; }));
+			    .domain([0, 1.2])
+			    .range(d3.range(13).map(function(d) { 
+			    	var x = "q" + d + "-11";
+			    	return "q" + d + "-11"; }));
 
 			var svg = d3.select("body").selectAll("svg")
-			    .data(d3.range(1990, 2011))
+			    .data(d3.range(2015, 2017))
 			  .enter().append("svg")
 			    .attr("width", width)
 			    .attr("height", height)
@@ -117,18 +122,39 @@
 			    .attr("class", "month")
 			    .attr("d", monthPath);
 
-			d3.csv("assets/images/dji.csv", function(error, csv) {
-			  if (error) throw error;
+			d3.json("/getAllResourcesActivity", function(error, myData) {
+				//if (error) throw error;
 
-			  var data = d3.nest()
-			    .key(function(d) { return d.Date; })
-			    .rollup(function(d) { return (d[0].Close - d[0].Open) / d[0].Open; })
-			    .map(csv);
+				var countsByDate = [
+					{date: '2010-01-01', value: '10'},
+					{date: '2015-01-01', value: '1'},
+					{date: '2015-05-01', value: '5'},
+					{date: '2015-01-02', value: '0.1'},
+				];
 
-			  rect.filter(function(d) { return d in data; })
-			      .attr("class", function(d) { return "day " + color(data[d]); })
-			    .select("title")
-			      .text(function(d) { return d + ": " + percent(data[d]); });
+				var data = d3.nest()
+					.key(function(d) { return d.date; })
+					.rollup(function(d) {
+					return d[0].value/nbResources;
+					//return (10829.68 - 10789.72)/10789.72;
+					})
+					.map(myData);
+
+					//var csv2 = "Date,Open,High,Low,Close,Volume,Adj Close\n2015-01-01,10789.72,10907.41,10759.14,10829.68,4298910000,10829.68";
+
+					/*var data2 = d3.nest()
+					.key(function(d) { return d.Date; })
+					.rollup(function(d) { return (d[0].Close - d[0].Open) / d[0].Open; })
+					.map(csv2);*/
+
+				rect.filter(function(d) { return d in data; })
+					.attr("class", function(d) {
+						var tempVal = "day " + color(data[d]);
+						return "day " + color(data[d]); })
+					.select("title")
+					.text(function(d) {
+					var tempVal = d + ": " + percent(data[d]);
+					return d + ": " + percent(data[d]); });
 			});
 
 			function monthPath(t0) {
