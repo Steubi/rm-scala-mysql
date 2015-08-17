@@ -121,7 +121,24 @@
 					$scope.hideProjectsDetails = true;
 				};
 			};
+
+			var toUTCDate = function(date){
+		    var _utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),  date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+			    return _utc;
+			  };
+		  
+			  var millisToUTCDate = function(millis){
+			    return toUTCDate(new Date(millis));
+			  };
+		  
+		    $scope.toUTCDate = toUTCDate;
+		    $scope.millisToUTCDate = millisToUTCDate;
+
+
 		});
+
+
+		
 	//]]>
 	</script>
 
@@ -152,7 +169,7 @@
 	</nav>
 <div ng-app="app" ng-controller="Ctrl" class="ng-scope">
 
-	<p ><span class="glyphicon glyphicon-search"> <input type="text" ng-model="myFilter" class="searchBox">
+	<p ><span class="glyphicon glyphicon-search"> <input type="text" ng-model="searchTable.$" class="searchBox">
 		
 	</p>
 
@@ -171,25 +188,25 @@
             </td>
 			<td style="display:none;">Project ID</td>
 			<td>Project Name</td>
-			<td>IATA Code</td>
+			<td>IATA Code<br/><input ng-model="searchTable.iataCode" size="2"></td>
             <td>Customer Name</td>
             <td ng-hide="hideProjectsDetails">Customer Type</td>
 			<td>High Level Scope</td>
 			<td ng-hide="hideProjectsDetails">CR</td>
 			<td ng-hide="hideProjectsDetails" width="150px">Detailed Scope</td>
 			<td>Priority</td>
-			<td>Slot Status</td>
-			<td width="75px">Slot Request Date</td>
+			<td>Slot Status<br/><input ng-model="searchTable.slotStatus" size="10l"></td>
+			<td >Slot Req Date</td>
 			<td ng-hide="hideProjectsDetails">Q. Filed</td>
 			<td ng-hide="hideProjectsDetails">BC Filed</td>
 			<td>Sizing (MD)</td>
-			<td width="75px">Start (wish)</td>
-			<td width="75px">End (wish)</td>
-			<td width="75px">Slot Expiry Date</td>
-			<td width="200px">Status</td>
+			<td>Start</td>
+			<td>End</td>
+			<td>Slot Exp Date</td>
+			<td>Status</td>
             <td></td>
         </tr>
-        <tr ng-repeat="project in projects | filter:myFilter">
+        <tr ng-repeat="project in projects | filter:searchTable">
             <td style="white-space: nowrap">
                 <!-- form -->
                 <form editable-form name="rowform" onbeforesave="saveProject($data, $index)" onaftersave="refreshProjects()" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == project">
@@ -261,7 +278,7 @@
 			</td>
 			<td>
 						<span editable-date="project.slotRequestDate" e-name="slotRequestDate" e-form="rowform">
-						{{ project.slotRequestDate || 'empty' }}
+						{{ millisToUTCDate(project.slotRequestDate) | date:'dd-MMM-yy'}}
 						</span>
 			</td>
 			<td ng-hide="hideProjectsDetails">
@@ -281,21 +298,21 @@
 			</td>
 			<td>
 						<span editable-date="project.wishedStartDate" e-name="wishedStartDate" e-form="rowform">
-						{{ project.wishedStartDate || 'empty' }}
+						{{ millisToUTCDate(project.wishedStartDate) | date:'dd-MMM-yy'}}
 						</span>
 			</td>
 			<td>
 						<span editable-date="project.wishedEndDate" e-name="wishedEndDate" e-form="rowform">
-						{{ project.wishedEndDate || 'empty' }}
+						{{ millisToUTCDate(project.wishedEndDate) | date:'dd-MMM-yy'}}
 						</span>
 			</td>
 			<td>
 						<span editable-date="project.slotExpiryDate" e-name="slotExpiryDate" e-form="rowform">
-						{{ project.slotExpiryDate || 'empty' }}
+						{{ millisToUTCDate(project.slotExpiryDate) | date:'dd-MMM-yy'}}
 						</span>
 			</td>
 			<td>
-						<span editable-textarea="project.status" e-name="status" e-form="rowform" e-cols="50">
+						<span editable-textarea="project.status" e-name="status" e-form="rowform" e-cols="40">
 							<pre>{{ project.status}}</pre>
 						</span>
 			</td>
