@@ -21,11 +21,11 @@ import scala.collection.mutable.ListBuffer
 
 class Application extends Controller {
 
-  def index = Action { 
+  def index = Action {
 
   	Ok(views.html.rm_index())
     //Ok(views.html.test())
-    
+
   }
 
   def getAllResourcesSlots() = Action {
@@ -94,7 +94,7 @@ class Application extends Controller {
         Future(BadRequest("Record not found"))
       }
     }
-        
+
   }
 
   def projectPage(projectID: Int) = Action{
@@ -102,7 +102,7 @@ class Application extends Controller {
   }
 
   def projectDetails(projectID: Int) = Action {
-    
+
     val project = ProjectDetails.findById(projectID)
 
 
@@ -114,7 +114,7 @@ class Application extends Controller {
     }
 
 
-    
+
   }
 
 
@@ -135,7 +135,7 @@ class Application extends Controller {
     // Pattern matching
     slotResult match {
       case s: JsSuccess[Slot] => {
-        Logger.debug("Project Object: " + s.value)  
+        Logger.debug("Project Object: " + s.value)
         Slot.update(s.value);
         //Project.insert(s.value);
         Future(Created)
@@ -145,7 +145,7 @@ class Application extends Controller {
         Future(BadRequest("Record not found"))
       }
     }
-        
+
   }
 
   def saveNewSlot = Action.async(parse.json) { request =>
@@ -165,7 +165,7 @@ class Application extends Controller {
     // Pattern matching
     projectResult match {
       case s: JsSuccess[Slot] => {
-        Logger.debug("Project Object: " + s.value)  
+        Logger.debug("Project Object: " + s.value)
         Slot.insert(s.value);
         //Project.insert(s.value);
         Future(Created)
@@ -175,7 +175,7 @@ class Application extends Controller {
         Future(BadRequest("Record not found"))
       }
     }
-        
+
   }
 
   def deleteSlot = Action.async(parse.json) { request =>
@@ -198,7 +198,7 @@ class Application extends Controller {
      * turned into a JsObject using a Writes.)
      */
 
-    
+
     val resourceResult: JsResult[Resource] = request.body.validate[Resource]
 
     // Pattern matching
@@ -215,14 +215,14 @@ class Application extends Controller {
           //TODO: Check all return code...
           Future(Created)
         }
-        
+
       }
       case e: JsError => {
         Logger.debug("ERROR:" + e.toString)
         Future(BadRequest("Record not found"))
       }
     }
-        
+
   }
 
   def deleteResource = Action.async(parse.json) { request =>
