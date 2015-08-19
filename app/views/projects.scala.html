@@ -1,347 +1,354 @@
 <html>
 
-	<head>
 
-	    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-	    <title>Resoures Management NBU TIU</title>
-	    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
-	    <script type="text/javascript" src="http://vitalets.github.io/angular-xeditable/dist/js/xeditable.js"></script>
-	    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
-	    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-	    <link rel="stylesheet" type="text/css" href="http://vitalets.github.io/angular-xeditable/dist/css/xeditable.css">
-	    <script type="text/javascript" src="http://code.angularjs.org/1.0.8/angular-resource.js"></script>
-	    <link rel="stylesheet" type="text/css" href="assets/stylesheets/main.css">
+<head>
 
-	</head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Resoures Management NBU TIU</title>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+  <script type="text/javascript" src="http://vitalets.github.io/angular-xeditable/dist/js/xeditable.js"></script>
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"/>
+  <link rel="stylesheet" type="text/css" href="http://vitalets.github.io/angular-xeditable/dist/css/xeditable.css"/>
+  <script type="text/javascript" src="http://code.angularjs.org/1.0.8/angular-resource.js"></script>
+  <link rel="stylesheet" type="text/css" href="assets/stylesheets/main.css"/>
 
-
-
-	<script type="text/javascript">//<![CDATA[
-		var app = angular.module("app", ["xeditable", "ngResource"]);
-		var myData = ""
-
-		
-		
-		app.run(function(editableOptions) {
-			editableOptions.theme = 'bs3';
-		});
-		app.controller('Ctrl', function($scope, $filter, $http) {
-			$scope.hideProjectsDetails = true;
-
-			 $scope.projects = myData;
-			 //$scope.projects = testData2;
-			 $http.get('/getAllProjects')
-       			.then(function(res){
-          				$scope.projects = res.data;
-        	});
-			/*$scope.priorities = [
-			{text: 'low'},
-			{text: 'high'},
-			{text: 'medium'}
-		  ];*/
-		  $scope.priorities = ["low","high","medium"];
-		  $scope.statuses = ["committed","completed","planned","released","requested","to request"];
-		  $scope.yesNo = ["yes","no"];
-		  //$scope.yesNo = ["true","false"];
-		  $scope.customerTypes = ["3rd Party","Airline","Airport","Corporation","Cruise","Gov Body","OLTA","Other","TMC","Tour Operator", "Travel Agency"];
-			$scope.checkName = function(data, id) {
-				if (id === 2 && data !== 'awesome') {
-					return "Username 2 should be `awesome`";
-				}
-			};
-			$scope.saveProject = function(data, index) {
-				//$scope.project not updated yet
-				//angular.extend(data, {id: id});
-				data.estimatedSizing = parseInt(data.estimatedSizing)
+</head>
 
 
-				return $http.post('/saveProject', data).
-					  success(function(dataResp, status, headers, config) {
-						//$scope.projects[id].projectID = dataResp.projectID;
-						if (data.projectID == -1){
-							data.projectID = dataResp.id;
-							$scope.projects.splice(index, 1);
-							$scope.projects.push(data);
-						}
-						//$scope.$apply();
-						// this callback will be called asynchronously
-						// when the response is available
-					  }).
-					  error(function(dataResp, status, headers, config) {
-						// called asynchronously if an error occurs
-						// or server returns response with an error status.
-					  });
-			};
-			$scope.refreshProjects = function(){
-				//$scope.$apply();
-			}
-			// remove project
-			$scope.removeProject = function(pID,index) {
-				var req = {
-					 method: 'POST',
-					 url: '/deleteProject',
-					 headers: {'Content-Type': 'application/json'},
-					 data: {id: pID}
-				};
-				$http(req).success(function(){
-					$scope.projects.splice(index, 1);
-				}).error(function(){});
-				//var obj = JSON.parse('{projectID: 8}');
-				//return $http.post('/deleteProject', obj);
-			};
-			// add project
-			$scope.addProject = function() {
-				$scope.inserted = {
-					id: -1,
-					projectName: "New project",
-					iataCode: "",
-					customerName: "bla",
-					customerType: "",
-					highLevelScope: "",
-					cr: "",
-					priority: "low",
-					slotStatus: "to request",
-					slotRequestDate: "2015-07-15",
-					questionaireFiled: false,
-					businessCaseFiled: false,
-					estimatedSizing: 0,
-					wishedStartDate: "1900-01-01",
-					wishedEndDate: "1900-01-01",
-					slotExpiryDate: "2015-08-15",
-					status: ""
 
-				};
-				$scope.projects.push($scope.inserted);
-			};
-
-			$scope.showHideProjectsDetails = function(){
-				if ($scope.hideProjectsDetails){
-					$scope.hideProjectsDetails = false;
-				} else {
-					$scope.hideProjectsDetails = true;
-				};
-			};
-
-			var toUTCDate = function(date){
-		    var _utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),  date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
-			    return _utc;
-			  };
-		  
-			  var millisToUTCDate = function(millis){
-			    return toUTCDate(new Date(millis));
-			  };
-		  
-		    $scope.toUTCDate = toUTCDate;
-		    $scope.millisToUTCDate = millisToUTCDate;
+<script type="text/javascript">
+var app = angular.module("app", ["xeditable", "ngResource"]);
+var myData = ""
 
 
-		});
+app.run(function(editableOptions) {
+  editableOptions.theme = 'bs3';
+});
 
+app.controller('Ctrl', function($scope, $filter, $http) {
+  $scope.hideProjectsDetails = true;
 
-		
-	//]]>
-	</script>
+  $scope.projects = myData;
+
+  $http.get('/getAllProjects').then(function(res){
+    $scope.projects = res.data;
+  });
+
+  $scope.priorities = ["1","2","3"];
+  $scope.statuses = ["committed","completed","planned","released","requested","to request"];
+  $scope.yesNo = ["yes","no"];
+  $scope.customerTypes = ["3rd Party","Airline","Airport","Corporation","Cruise","Gov Body",
+  "OLTA","Other","TMC","Tour Operator", "Travel Agency"];
+
+  $scope.checkName = function(data, id) {
+    if (id === 2 && data !== 'awesome') {
+      return "Username 2 should be `awesome`";
+    }
+  };
+
+  $scope.saveProject = function(data, index) {
+    //$scope.project not updated yet
+    data.estimatedSizing = parseInt(data.estimatedSizing)
+
+    //Get the data
+    return $http.post('/saveProject', data).success(function(dataResp, status, headers, config) {
+      if (data.projectID == -1){
+        data.projectID = dataResp.id;
+        $scope.projects.splice(index, 1);
+        $scope.projects.push(data);
+      }
+    }).error(function(dataResp, status, headers, config) {
+      // called asynchronously if an error occurs
+      // or server returns response with an error status.
+      //TODO: process error
+    });
+  };
+
+  $scope.refreshProjects = function(){
+    //$scope.$apply();
+  };
+
+  // remove project
+  $scope.removeProject = function(pID,index) {
+    var req = {
+      method: 'POST',
+      url: '/deleteProject',
+      headers: {'Content-Type': 'application/json'},
+      data: {id: pID}
+    };
+    $http(req).success(function(){
+      $scope.projects.splice(index, 1);
+    }).error(function(){
+      //TODO: process error
+    });
+  };
+  // add project
+  $scope.addProject = function() {
+    $scope.inserted = {
+      id: -1,
+      projectName: "New project",
+      iataCode: "",
+      customerName: "bla",
+      customerType: "",
+      highLevelScope: "",
+      cr: "",
+      priority: "low",
+      slotStatus: "to request",
+      slotRequestDate: "2015-07-15",
+      questionaireFiled: false,
+      businessCaseFiled: false,
+      estimatedSizing: 0,
+      wishedStartDate: "1900-01-01",
+      wishedEndDate: "1900-01-01",
+      slotExpiryDate: "2015-08-15",
+      status: ""
+    };
+    $scope.projects.push($scope.inserted);
+  };
+
+  $scope.showHideProjectsDetails = function(){
+    if ($scope.hideProjectsDetails){
+      $scope.hideProjectsDetails = false;
+    } else {
+      $scope.hideProjectsDetails = true;
+    };
+  };
+
+  var toUTCDate = function(date){
+    var _utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),  date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+    return _utc;
+  };
+
+  var millisToUTCDate = function(millis){
+    return toUTCDate(new Date(millis));
+  };
+
+  $scope.toUTCDate = toUTCDate;
+  $scope.millisToUTCDate = millisToUTCDate;
+
+  $scope.predicate = 'id';
+  $scope.reverse = true;
+  $scope.order = function(predicate) {
+    $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;
+    $scope.predicate = predicate;
+  };
+
+});
+
+</script>
 
 
 <body>
-	<nav class="navbar navbar-default">
-		  <div class="container-fluid">
-		    <div class="navbar-header">
-		    	<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-			        <span class="icon-bar"></span>
-			        <span class="icon-bar"></span>
-			        <span class="icon-bar"></span> 
-			    </button>
-		        <a class="navbar-brand">Resources Management</a>
-		    </div>
-		    <div class="collapse navbar-collapse" id="myNavbar">
-			    <ul class="nav navbar-nav">
-			        <li><a href="/">Home</a></li>
-			        <li class="active"><a>Projects</a></li>
-			        <li><a href="/resources">Resources</a></li> 
-			        <li><a href="#">Vacations</a></li> 
-			    </ul>
-		        <ul class="nav navbar-nav navbar-right">
-		            <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
-		        </ul>
-		    </div>
-		  </div>
-	</nav>
-<div ng-app="app" ng-controller="Ctrl" class="ng-scope">
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand">Resources Management</a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+          <li><a href="/">Home</a></li>
+          <li class="active"><a>Projects</a></li>
+          <li><a href="/resources">Resources</a></li>
+          <li><a href="#">Vacations</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#"><span class="glyphicon glyphicon-log-in"/> Login</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <div ng-app="app" ng-controller="Ctrl" class="ng-scope">
 
-	<p ><span class="glyphicon glyphicon-search"> <input type="text" ng-model="searchTable.$" class="searchBox">
-		
-	</p>
+    <!--Main search box. This search box applies to the whole table-->
+    <p >
+      <span class="glyphicon glyphicon-search"/>
+      <input type="text" ng-model="searchTable.$" class="searchBox"/>
+    </p>
 
-    
 
+    <!--Display table containing the list of projects-->
     <table class="table table-bordered table-hover rmTable">
-        <tr style="font-weight: bold">
-            <td>
-            	<button ng-hide="hideProjectsDetails" class="btn btn-default" ng-click="showHideProjectsDetails()">
-					<span  class="glyphicon glyphicon-minus">
-				</button>
-				<button ng-show="hideProjectsDetails" class="btn btn-default" ng-click="showHideProjectsDetails()">
-					<span class="glyphicon glyphicon-plus">
-				</button>
+      <tr style="font-weight: bold">
+        <td>
+          <button ng-hide="hideProjectsDetails" class="btn btn-default" ng-click="showHideProjectsDetails()">
+            <span  class="glyphicon glyphicon-minus"/>
+          </button>
+          <button ng-show="hideProjectsDetails" class="btn btn-default" ng-click="showHideProjectsDetails()">
+            <span class="glyphicon glyphicon-plus"/>
+          </button>
+        </td>
+        <td style="display:none;">Project ID</td>
+        <td>Project Name</td>
+        <td>
+          IATA Code <span class="glyphicon glyphicon-sort" ng-click="order('iataCode')"/>
+          <br/><input ng-model="searchTable.iataCode" size="2">
+        </td>
+        <td>
+          Customer Name
+          <span class="glyphicon glyphicon-sort"  ng-click="order('customerName')"/>
+          <br/><input ng-model="searchTable.customerName" size="10">
+        </td>
+        <td ng-hide="hideProjectsDetails">Customer Type</td>
+        <td>High Level Scope</td>
+        <td ng-hide="hideProjectsDetails">CR</td>
+        <td ng-hide="hideProjectsDetails" width="150px">Detailed Scope</td>
+        <td>
+          Priority
+          <span class="glyphicon glyphicon-sort"  ng-click="order('priority')"/>
+        </td>
+        <td>
+          Slot Status
+          <span class="glyphicon glyphicon-sort"  ng-click="order('slotStatus')"/><br/>
+          <input ng-model="searchTable.slotStatus" size="10">
+        </td>
+        <td >Slot Req Date</td>
+        <td ng-hide="hideProjectsDetails">Q. Filed</td>
+        <td ng-hide="hideProjectsDetails">BC Filed</td>
+        <td>Sizing (MD)</td>
+        <td>Start
+          <span class="glyphicon glyphicon-sort"  ng-click="order('wishedStartDate')"/>
+        </td>
+        <td>End</td>
+        <td>Slot Exp Date
+          <span class="glyphicon glyphicon-sort"  ng-click="order('slotExpiryDate')"/>
+        </td>
+        <td>Status</td>
+        <td></td>
+      </tr>
+      <tr ng-repeat="project in projects | filter:searchTable | orderBy:predicate:reverse">
+        <td style="white-space: nowrap">
+          <!-- form -->
+          <form editable-form name="rowform" onbeforesave="saveProject($data, $index)" onaftersave="refreshProjects()" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == project">
+            <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-success">
+              <span class="glyphicon glyphicon-ok"/>
+            </button>
+            <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-warning">
+              <span class="glyphicon glyphicon-remove"/>
+            </button>
+          </form>
+          <div class="buttons" ng-show="!rowform.$visible">
+            <button class="btn btn-primary" ng-click="rowform.$show()">
+              <span class="glyphicon glyphicon-pencil"/>
+            </button>
+          </div>
+        </td>
+        <td style="display:none;">
+          <span editable-text="project.id" e-name="id" e-form="rowform"/>
+          {{ project.id || 'empty' }}
 
-            </td>
-			<td style="display:none;">Project ID</td>
-			<td>Project Name</td>
-			<td>IATA Code<br/><input ng-model="searchTable.iataCode" size="2"></td>
-            <td>Customer Name</td>
-            <td ng-hide="hideProjectsDetails">Customer Type</td>
-			<td>High Level Scope</td>
-			<td ng-hide="hideProjectsDetails">CR</td>
-			<td ng-hide="hideProjectsDetails" width="150px">Detailed Scope</td>
-			<td>Priority</td>
-			<td>Slot Status<br/><input ng-model="searchTable.slotStatus" size="10l"></td>
-			<td >Slot Req Date</td>
-			<td ng-hide="hideProjectsDetails">Q. Filed</td>
-			<td ng-hide="hideProjectsDetails">BC Filed</td>
-			<td>Sizing (MD)</td>
-			<td>Start</td>
-			<td>End</td>
-			<td>Slot Exp Date</td>
-			<td>Status</td>
-            <td></td>
-        </tr>
-        <tr ng-repeat="project in projects | filter:searchTable">
-            <td style="white-space: nowrap">
-                <!-- form -->
-                <form editable-form name="rowform" onbeforesave="saveProject($data, $index)" onaftersave="refreshProjects()" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == project">
-                    <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-success">
-                        <span class="glyphicon glyphicon-ok">
-                    </button>
-                    <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-warning">
-                        <span class="glyphicon glyphicon-remove">
-                    </button>
-                </form>
-                <div class="buttons" ng-show="!rowform.$visible">
-                    <button class="btn btn-primary" ng-click="rowform.$show()"><span class="glyphicon glyphicon-pencil"></button>
-                </div>
-            </td>
-			<td style="display:none;">
-				<!-- editable username (text with validation) -->
-						<span editable-text="project.id" e-name="id" e-form="rowform">
-						{{ project.id || 'empty' }}
+        </td>
+        <td>
+          <a href="/projectPage?projectID={{project.id}}" editable-text="project.projectName" e-name="projectName" e-form="rowform">
+            {{ project.projectName || '' }}
+          </a>
 
-            </td>
-			<td>
-				<!-- editable username (text with validation) -->
-						<a href="/projectPage?projectID={{project.id}}" editable-text="project.projectName" e-name="projectName" e-form="rowform">
-						{{ project.projectName || '' }}</a>
+        </td>
+        <td>
+          <span editable-text="project.iataCode" e-name="iataCode" e-form="rowform">
+            {{ project.iataCode || '' }}
+          </span>
+        </td>
 
-            </td>
-			<td>
-				<!-- editable username (text with validation) -->
-						<span editable-text="project.iataCode" e-name="iataCode" e-form="rowform">
-						{{ project.iataCode || '' }}
-			</td>
+        <td>
+          <span editable-text="project.customerName" e-name="customerName" e-form="rowform">
+            {{ project.customerName || 'empty' }}
+          </span>
+        </td>
+        <td ng-hide="hideProjectsDetails">
+          <span editable-select="project.customerType" e-name="customerType" e-form="rowform" e-ng-options="s for s in customerTypes">
+            {{ project.customerType || 'empty' }}
+          </span>
+        </td>
+        <td>
+          <span editable-text="project.highLevelScope" e-name="highLevelScope" e-form="rowform">
+            {{ project.highLevelScope || '' }}
+          </span>
+        </td>
+        <td ng-hide="hideProjectsDetails">
+          <span editable-text="project.cr" e-name="cr" e-form="rowform">
+            {{ project.cr || '' }}
+          </span>
+        </td>
+        <td ng-hide="hideProjectsDetails">
+          <span editable-text="project.detailedScope" e-name="detailedScope" e-form="rowform">
+            {{ project.detailedScope || '' }}
+          </span>
+        </td>
+        <td>
+          <span editable-select="project.priority" e-name="priority" e-form="rowform" e-ng-options="s for s in priorities">
+            {{ project.priority || '' }}
+          </span>
+        </td>
+        <td>
+          <span editable-select="project.slotStatus" e-name="slotStatus" e-form="rowform" e-ng-options="s for s in statuses">
+            {{ project.slotStatus || 'empty' }}
+          </span>
+        </td>
+        <td>
+          <span editable-date="project.slotRequestDate" e-name="slotRequestDate" e-form="rowform">
+            {{ millisToUTCDate(project.slotRequestDate) | date:'dd-MMM-yy'}}
+          </span>
+        </td>
+        <td ng-hide="hideProjectsDetails">
+          <span editable-checkbox="project.questionaireFiled" e-name="questionaireFiled" e-form="rowform">
+            {{ project.questionaireFiled && "Y" || "N" }}
+          </span>
+        </td>
+        <td ng-hide="hideProjectsDetails">
+          <span editable-checkbox="project.businessCaseFiled" e-name="businessCaseFiled" e-form="rowform">
+            {{ project.businessCaseFiled && "Y" || "N" }}
+          </span>
+        </td>
+        <td>
+          <span editable-text="project.estimatedSizing" e-name="estimatedSizing" e-form="rowform">
+            {{ project.estimatedSizing || 'empty' }}
+          </span>
+        </td>
+        <td>
+          <span editable-date="project.wishedStartDate" e-name="wishedStartDate" e-form="rowform">
+            {{ millisToUTCDate(project.wishedStartDate) | date:'dd-MMM-yy'}}
+          </span>
+        </td>
+        <td>
+          <span editable-date="project.wishedEndDate" e-name="wishedEndDate" e-form="rowform">
+            {{ millisToUTCDate(project.wishedEndDate) | date:'dd-MMM-yy'}}
+          </span>
+        </td>
+        <td>
+          <span editable-date="project.slotExpiryDate" e-name="slotExpiryDate" e-form="rowform">
+            {{ millisToUTCDate(project.slotExpiryDate) | date:'dd-MMM-yy'}}
+          </span>
+        </td>
+        <td>
+          <span editable-textarea="project.status" e-name="status" e-form="rowform" e-cols="40">
+            <pre>{{ project.status}}</pre>
+          </span>
+        </td>
 
-            <td>
-                <!-- editable username (text with validation) -->
-						<span editable-text="project.customerName" e-name="customerName" e-form="rowform">
-						{{ project.customerName || 'empty' }}
-						</span>
-            </td>
-            <td ng-hide="hideProjectsDetails">
-                <!-- editable group (select-remote) -->
-						<span editable-select="project.customerType" e-name="customerType" e-form="rowform" e-ng-options="s for s in customerTypes">
-						{{ project.customerType || 'empty' }}
-						</span>
-            </td>
-			<td>
-						<span editable-text="project.highLevelScope" e-name="highLevelScope" e-form="rowform">
-						{{ project.highLevelScope || '' }}
-						</span>
-			</td>
-			<td ng-hide="hideProjectsDetails">
-						<span editable-text="project.cr" e-name="cr" e-form="rowform">
-						{{ project.cr || '' }}
-						</span>
-			</td>
-			<td ng-hide="hideProjectsDetails">
-						<span editable-text="project.detailedScope" e-name="detailedScope" e-form="rowform">
-						{{ project.detailedScope || '' }}
-						</span>
-			</td>
-			<td>
-						<span editable-select="project.priority" e-name="priority" e-form="rowform" e-ng-options="s for s in priorities">
-						{{ project.priority || '' }}
-						</span>
-			</td>
-			<td>
-						<span editable-select="project.slotStatus" e-name="slotStatus" e-form="rowform" e-ng-options="s for s in statuses">
-						{{ project.slotStatus || 'empty' }}
-						</span>
-			</td>
-			<td>
-						<span editable-date="project.slotRequestDate" e-name="slotRequestDate" e-form="rowform">
-						{{ millisToUTCDate(project.slotRequestDate) | date:'dd-MMM-yy'}}
-						</span>
-			</td>
-			<td ng-hide="hideProjectsDetails">
-						<span editable-checkbox="project.questionaireFiled" e-name="questionaireFiled" e-form="rowform">
-    							{{ project.questionaireFiled && "Y" || "N" }}
-  						</span>
-			</td>
-			<td ng-hide="hideProjectsDetails">
-						<span editable-checkbox="project.businessCaseFiled" e-name="businessCaseFiled" e-form="rowform">
-    							{{ project.businessCaseFiled && "Y" || "N" }}
-  						</span>
-			</td>
-			<td>
-						<span editable-text="project.estimatedSizing" e-name="estimatedSizing" e-form="rowform">
-						{{ project.estimatedSizing || 'empty' }}
-						</span>
-			</td>
-			<td>
-						<span editable-date="project.wishedStartDate" e-name="wishedStartDate" e-form="rowform">
-						{{ millisToUTCDate(project.wishedStartDate) | date:'dd-MMM-yy'}}
-						</span>
-			</td>
-			<td>
-						<span editable-date="project.wishedEndDate" e-name="wishedEndDate" e-form="rowform">
-						{{ millisToUTCDate(project.wishedEndDate) | date:'dd-MMM-yy'}}
-						</span>
-			</td>
-			<td>
-						<span editable-date="project.slotExpiryDate" e-name="slotExpiryDate" e-form="rowform">
-						{{ millisToUTCDate(project.slotExpiryDate) | date:'dd-MMM-yy'}}
-						</span>
-			</td>
-			<td>
-						<span editable-textarea="project.status" e-name="status" e-form="rowform" e-cols="40">
-							<pre>{{ project.status}}</pre>
-						</span>
-			</td>
-
-            <td style="white-space: nowrap">
-                <div class="buttons" ng-show="!rowform.$visible">
-                    <button class="btn btn-danger" ng-click="removeProject(project.id,$index)"><span class="glyphicon glyphicon-trash"></span></button>
-                </div>
-            </td>
-        </tr>
-        <tr>
-        	<td style="border: none">
-        		<button class="btn btn-primary" ng-click="addProject()"><span class="glyphicon glyphicon-plus"></button>
-        	</td>
-        </tr>
+        <td style="white-space: nowrap">
+          <div class="buttons" ng-show="!rowform.$visible">
+            <button class="btn btn-danger" ng-click="removeProject(project.id,$index)">
+              <span class="glyphicon glyphicon-trash"></span>
+            </button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="border: none">
+          <button class="btn btn-primary" ng-click="addProject()">
+            <span class="glyphicon glyphicon-plus"/>
+          </button>
+        </td>
+      </tr>
     </table>
 
-    
-</div>
-
-
-
-
-
-
-
-
-
-
+  </div>
 
 </body>
 </html>
