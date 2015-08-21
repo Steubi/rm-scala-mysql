@@ -84,11 +84,11 @@ object Resource{
    */
   def insert(resource: Resource): Int = {
 
-    //Get new ID 
+    //Get new ID
     val currentMaxId = DB.withConnection { implicit connection =>
       SQL("select MAX(ID) from RESOURCES").as(SqlParser.int("MAX(ID)").single)
     }
-    
+
     val newID = currentMaxId + 1
 
     DB.withConnection { implicit connection =>
@@ -142,7 +142,7 @@ object Resource{
   (JsPath \ "position").read[String] and
   (JsPath \ "location").read[String]
   )(Resource.apply _)
-  
+
 }
 
 case class Slot(slotID:Int, resourceID:Int, projectID: Int, startDate: Date, endDate: Date, allocationPercentage: Int, slotDescription: String)
@@ -226,7 +226,7 @@ object Slot{
    */
   def insert(slot: Slot) = {
 
-    //Get new ID 
+    //Get new ID
     val currentMaxId = DB.withConnection { implicit connection =>
       SQL("select MAX(ID) from SLOTS").as(SqlParser.int("MAX(ID)").single)
     }
@@ -285,7 +285,7 @@ object Slot{
   (JsPath \ "startDate").read[Date] and
   (JsPath \ "endDate").read[Date] and
   (JsPath \ "allocationPercentage").read[Int] and
-  (JsPath \ "slotDescription").read[String] 
+  (JsPath \ "slotDescription").read[String]
   )(Slot.apply _)
 
 
@@ -392,10 +392,10 @@ object ResourceSlots{
       "slots" -> resource.slots
     )
   }
-  
+
 }
 
-case class ProjectResourceSlots(resourceID: Int, firstName: String, lastName: String, position: String, location:String, 
+case class ProjectResourceSlots(resourceID: Int, firstName: String, lastName: String, position: String, location:String,
                                 slotID: Int, projectID: Int, startDate: Date, endDate: Date, allocationPercentage: Int, slotDescription: String)
 
 object ProjectResourceSlots{
@@ -415,7 +415,7 @@ object ProjectResourceSlots{
     get[Date]("SLOTS.END_DATE") ~
     get[Int]("SLOTS.ALLOCATION_PERCENTAGE") ~
     get[String]("SLOTS.SLOT_DESCRIPTION") map {
-      case resourceID~firstName~lastName~position~location~slotID~projectID~startDate~endDate~allocationPercentage~slotDescription => 
+      case resourceID~firstName~lastName~position~location~slotID~projectID~startDate~endDate~allocationPercentage~slotDescription =>
         ProjectResourceSlots(resourceID, firstName, lastName, position, location, slotID, projectID, startDate, endDate, allocationPercentage, slotDescription)
     }
   }
@@ -461,7 +461,7 @@ object ProjectResourceSlots{
       "slotDescription" -> resource.slotDescription
     )
   }
-  
+
 }
 
 case class Serie(name: String, data:Array[Float])
@@ -578,9 +578,9 @@ object BankHoliday{
   }
 
   /**
-   * Update a resource.
+   * Update a bank holiday.
    *
-   * @param resource The resource values.
+   * @param bankHoliday The bank holiday values.
    */
   def update(bankHoliday: BankHoliday) = {
     DB.withConnection { implicit connection =>
@@ -606,11 +606,11 @@ object BankHoliday{
    */
   /*def insert(resource: Resource): Int = {
 
-    //Get new ID 
+    //Get new ID
     val currentMaxId = DB.withConnection { implicit connection =>
       SQL("select MAX(ID) from RESOURCES").as(SqlParser.int("MAX(ID)").single)
     }
-    
+
     val newID = currentMaxId + 1
 
     DB.withConnection { implicit connection =>
@@ -662,7 +662,7 @@ object BankHoliday{
   (JsPath \ "name").read[String] and
   (JsPath \ "location").read[String]
   )(BankHoliday.apply _)
-  
+
 }
 
 case class ProjectDetails(id: Int, projectName: String, customerName: String, iataCode: String, highLevelScope:String,
@@ -682,7 +682,7 @@ case class ProjectDetails(id: Int, projectName: String, customerName: String, ia
     resources.map { resource =>
 
       atLeastOneResourceExist = true
-      
+
       //Check dates
       if (earliestDate==null){
         earliestDate = resource.startDate
@@ -697,7 +697,7 @@ case class ProjectDetails(id: Int, projectName: String, customerName: String, ia
       val resourceName = resource.firstName+" "+resource.lastName
       if (!personsList.contains(resourceName)) personsList += resourceName
 
- 
+
     }
 
     if (atLeastOneResourceExist){
@@ -747,13 +747,13 @@ case class ProjectDetails(id: Int, projectName: String, customerName: String, ia
                     personInGraphList match {
                       case Some(person) => person
                         person.data(numberOfDays-1) += (resource.allocationPercentage.toFloat / 100)
-                      case None => 
+                      case None =>
                     }
                   }
                 }
 
 
-                
+
 
               }
 
@@ -814,7 +814,7 @@ object ProjectDetails{
       "vacations" -> project.vacations
     )
   }
-  
+
 }
 
 case class Project(id: Int, projectName: String, customerName: String, customerType: String, iataCode: String, highLevelScope: String, cr: String, priority: String,
@@ -872,7 +872,7 @@ object Project{
    */
   def insert(project: Project) = {
 
-    //Get new ID 
+    //Get new ID
     val currentMaxId = DB.withConnection { implicit connection =>
       SQL("select MAX(ID) from PROJECTS").as(SqlParser.int("MAX(ID)").single)
     }
@@ -1014,7 +1014,7 @@ object Project{
 case class CalendarEntry(date: Date, value: Float)
 
 object CalendarEntry {
-    
+
 
   implicit val calendarEntryWrites = new Writes[CalendarEntry] {
     val format = new java.text.SimpleDateFormat("yyyy-MM-dd")

@@ -2,31 +2,28 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
-GET     /                           controllers.Application.index
+#Web Pages
+GET   /                           controllers.Application.index
+GET   /projects                   controllers.Application.projects
+GET   /projectPage                controllers.Application.projectPage(projectID: Int ?=0)
+GET   /resources                  controllers.Application.resourcesPage
+GET   /vacations                  controllers.Application.vacationsPage
+GET   /bankHolidays               controllers.Application.bankHolidaysPage
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET   /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
 #Web Services
-GET		/getAllResourcesSlots			controllers.Application.getAllResourcesSlots
-GET		/getAllResources 				controllers.Application.getAllResources
-GET		/getAllProjects					controllers.Application.getAllProjects
-POST    /saveProject                	controllers.Application.saveProject
-POST    /deleteProject                	controllers.Application.deleteProject
-GET     /projectDetails             	controllers.Application.projectDetails(projectID: Int ?=0)
-POST    /saveSlot		               	controllers.Application.saveSlot
-POST    /saveNewSlot		       		controllers.Application.saveNewSlot
-POST    /deleteSlot	                	controllers.Application.deleteSlot
-POST	/saveResource					controllers.Application.saveResource
-POST    /deleteResource	                controllers.Application.deleteResource
-GET 	/getAllResourcesActivity		controllers.Application.getAllResourcesActivity
-
-
-#Web Pages
-GET     /projects                       controllers.Application.projects
-GET		/projectPage				    controllers.Application.projectPage(projectID: Int ?=0)
-GET 	/resources 					    controllers.Application.resourcesPage
-
-
-
+GET   /getAllResourcesSlots       controllers.Application.getAllResourcesSlots
+GET   /getAllResources            controllers.Application.getAllResources
+GET   /getAllProjects             controllers.Application.getAllProjects
+POST  /saveProject                controllers.Application.saveProject
+POST  /deleteProject              controllers.Application.deleteProject
+GET   /projectDetails             controllers.Application.projectDetails(projectID: Int ?=0)
+POST  /saveSlot                   controllers.Application.saveSlot
+POST  /saveNewSlot                controllers.Application.saveNewSlot
+POST  /deleteSlot                 controllers.Application.deleteSlot
+POST  /saveResource               controllers.Application.saveResource
+POST  /deleteResource	            controllers.Application.deleteResource
+GET   /getAllResourcesActivity    controllers.Application.getAllResourcesActivity
+GET   /getAllBankHolidays         controllers.Application.getAllBankHolidays

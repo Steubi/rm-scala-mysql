@@ -1,0 +1,190 @@
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Resoures Management NBU TIU - Bank Holidays</title>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+  <script type="text/javascript" src="http://vitalets.github.io/angular-xeditable/dist/js/xeditable.js"></script>
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"/>
+  <link rel="stylesheet" type="text/css" href="http://vitalets.github.io/angular-xeditable/dist/css/xeditable.css"/>
+  <script type="text/javascript" src="http://code.angularjs.org/1.0.8/angular-resource.js"></script>
+  <link rel="stylesheet" type="text/css" href="assets/stylesheets/main.css"/>
+
+
+  <script type="text/javascript">
+  var app = angular.module("app", ["xeditable", "ngResource"]);
+
+  app.run(function(editableOptions) {
+    editableOptions.theme = 'bs3';
+  });
+
+  app.controller('Ctrl', function($scope, $filter, $http) {
+
+    //Define constants
+    $scope.locations = ["Chicago","Francfort","Madrid","Miami","Nice","Waltham"];
+
+    //Get the list of bank holidays
+    $http.get('/getAllBankHolidays').then(function(res){
+      $scope.bankHolidays = res.data;
+    });
+
+
+   $scope.saveBankHoliday = function(data, index) {
+
+      return $http.post('/saveBankHoliday', data).
+      success(function(dataResp, status, headers, config) {
+        //If it is a new resource which is saved, we need to read, and store, the id allocated to
+        // this new resource
+        if (data.id == -1){
+          data.id = dataResp.id;
+          $scope.bankHolidays.splice(index, 1);
+          $scope.bankHolidays.push(data);
+        }
+      }).error(function(dataResp, status, headers, config) {
+        // called asynchronously if an error occurs
+        // or server returns response with an error status.
+        //TODO: Handle Error
+      });
+    };
+
+    // add resource to table, the saveResource function will save it on the server
+    $scope.addBankHoliday = function() {
+      $scope.inserted = {
+        id: -1
+      };
+      $scope.bankHolidays.push({id: -1, name: "New Name", location: "Madrid" });
+    };
+
+    // delete bank holiday
+    $scope.deleteBankHoliday = function(pID,index) {
+      var req = {
+        method: 'POST',
+        url: '/deleteBankHoliday',
+        headers: {'Content-Type': 'application/json'},
+        data: {id: pID}
+      };
+      $http(req).success(function(){
+        $scope.bankHolidays.splice(index, 1);
+      }).error(function(){
+        //TODO: Handle error
+      });
+    };
+
+    var toUTCDate = function(date){
+      var _utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),  date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+      return _utc;
+    };
+
+    var millisToUTCDate = function(millis){
+      return toUTCDate(new Date(millis));
+    };
+
+    $scope.toUTCDate = toUTCDate;
+    $scope.millisToUTCDate = millisToUTCDate;
+
+  });
+  </script>
+
+</head>
+
+<body>
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand">Resources Management</a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+          <li><a href="/">Home</a></li>
+          <li><a href="/projects">Projects</a></li>
+          <li><a href="/resources">Resources</a></li>
+          <li><a href="/vacations">Vacations</a></li>
+          <li class="active"><a>Bank Holidays</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <h3>Bank Holidays</h3>
+  <div ng-app="app" ng-controller="Ctrl" class="ng-scope">
+    <!--Main search box. This search box applies to the whole table-->
+    <p >
+      <span class="glyphicon glyphicon-search"/>
+      <input type="text" ng-model="searchTable" class="searchBox"/>
+    </p>
+
+    <div class="row">
+      <div class="col-sm-12 col-md-10 col-lg-8">
+
+        <table class="table table-bordered table-hover rmTable">
+          <tr style="font-weight: bold">
+            <td></td>
+            <td style="display:none;">ID</td>
+            <td>Date</td>
+            <td>Name</td>
+            <td>Location</td>
+            <td></td>
+          </tr>
+          <tr ng-repeat="bankHoliday in bankHolidays  | filter:searchTable | orderBy:'date'">
+            <td style="white-space: nowrap">
+              <!-- form -->
+              <form editable-form name="rowform" onbeforesave="saveBankHoliday($data, $index)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == bankHoliday">
+                <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-success">
+                  <span class="glyphicon glyphicon-ok"/>
+                </button>
+                <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-warning">
+                  <span class="glyphicon glyphicon-remove"/>
+                </button>
+              </form>
+              <div class="buttons" ng-show="!rowform.$visible">
+                <button class="btn btn-primary" ng-click="rowform.$show()"><span class="glyphicon glyphicon-pencil"></span></button>
+              </div>
+            </td>
+            <td style="display:none;">
+              <span editable-text="bankHoliday.id" e-name="id" e-form="rowform">
+                {{ bankHoliday.id || 'empty' }}
+              </span>
+            </td>
+            <td>
+              <span editable-date="bankHoliday.date" e-name="date" e-form="rowform">
+                {{  millisToUTCDate(bankHoliday.date) | date:'dd-MMM-yy' }}
+              </span>
+
+            </td>
+            <td>
+              <span editable-text="bankHoliday.name" e-name="name" e-form="rowform">
+                {{ bankHoliday.name || 'empty' }}
+              </span>
+            </td>
+            <td>
+              <span editable-select="bankHoliday.location" e-name="location" e-form="rowform" e-ng-options="s for s in locations">
+                {{ bankHoliday.location || 'empty' }}
+              </span>
+            </td>
+
+            <td style="white-space: nowrap">
+              <div class="buttons" ng-show="!rowform.$visible">
+                <button class="btn btn-danger" ng-click="deleteBankHoliday(bankHoliday.id,bankHolidays.indexOf(bankHoliday))"><span class="glyphicon glyphicon-trash"></span></button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="border: none">
+              <button class="btn btn-primary" ng-click="addBankHoliday()"><span class="glyphicon glyphicon-plus"></span></button>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

@@ -36,15 +36,10 @@ class Application extends Controller {
 
   def getAllResources() = Action {
     val resources = Resource.listAll
-
     Ok(Json.toJson(resources).toString())
   }
 
   def getAllProjects() = Action {
-    //val testProject = new Project(99,"Test","","","","","","","",new Date(),false,false,0,new Date(),new Date(),new Date(),"")
-
-    //Project.insert(testProject)
-
     val projects = Project.listAll
     Ok(Json.toJson(projects).toString())
   }
@@ -258,6 +253,17 @@ class Application extends Controller {
     Ok(Json.toJson(calendarEntries).toString())
   }
 
+  def vacationsPage() = Action{
+    Ok(views.html.vacationsPage())
+  }
 
+  def bankHolidaysPage() = Action{
+    Ok(views.html.bankHolidaysPage())
+  }
+
+  def getAllBankHolidays() = Action {
+    val bankHolidays = BankHoliday.listAll
+    Ok(Json.toJson(bankHolidays).toString())
+  }
 
 }
