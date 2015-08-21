@@ -491,7 +491,7 @@ case class Vacation(id: Int, startDate: Date, endDate: Date, resourceID: Int, fi
 
 object Vacation {
   /**
-   * Parse a BankHoliday from a ResultSet
+   * Parse a Vacation from a ResultSet
    */
   val vacationParser = {
     get[Int]("VACATIONS.ID") ~
@@ -604,11 +604,11 @@ object BankHoliday{
    *
    * @param resource The resource values.
    */
-  /*def insert(resource: Resource): Int = {
+  def insert(bankHoliday: BankHoliday): Int = {
 
     //Get new ID
     val currentMaxId = DB.withConnection { implicit connection =>
-      SQL("select MAX(ID) from RESOURCES").as(SqlParser.int("MAX(ID)").single)
+      SQL("select MAX(ID) from BANK_HOLIDAYS").as(SqlParser.int("MAX(ID)").single)
     }
 
     val newID = currentMaxId + 1
@@ -616,24 +616,23 @@ object BankHoliday{
     DB.withConnection { implicit connection =>
       SQL(
         """
-          insert into RESOURCES (
-            ID, FIRST_NAME, LAST_NAME, POSITION, LOCATION
+          insert into BANK_HOLIDAYS (
+            ID, BANK_HOLIDAY_DATE, NAME, LOCATION
           ) values (
-            {id}, {firstName}, {lastName}, {position}, {location}
+            {id}, {date}, {name}, {location}
           )
         """
       ).on(
         'id -> newID,
-        'firstName -> resource.firstName,
-        'lastName -> resource.lastName,
-        'position -> resource.position,
-        'location -> resource.location
+        'date -> bankHoliday.date,
+        'name -> bankHoliday.name,
+        'location -> bankHoliday.location
       ).executeUpdate()
     }
 
     //Return the new ID
     newID
-  }*/
+  }
 
   /**
    * Delete a BankHoliday.

@@ -24,7 +24,6 @@ class Application extends Controller {
   def index = Action {
 
   	Ok(views.html.rm_index())
-    //Ok(views.html.test())
 
   }
 
@@ -265,5 +264,48 @@ class Application extends Controller {
     val bankHolidays = BankHoliday.listAll
     Ok(Json.toJson(bankHolidays).toString())
   }
+
+  def saveBankHoliday = Action.async(parse.json) { request =>
+    /*
+     * request.body is a JsValue.
+     * There is an implicit Writes that turns this JsValue as a JsObject,
+     * so you can call insert() with this JsValue.
+     * (insert() takes a JsObject as parameter, or anything that can be
+     * turned into a JsObject using a Writes.)
+     */
+
+
+    val bankHolidayResult: JsResult[BankHoliday] =
+      request.body.validate[BankHoliday]
+
+    // Pattern matching
+    bankHolidayResult match {
+      case s: JsSuccess[BankHoliday] => {
+        if (s.value.id == -1){
+          val newID = BankHoliday.insert(s.value);
+          // We need to return the new ID
+          Future(Created(Json.obj("id" -> newID)))
+        }
+        else{
+          BankHoliday.update(s.value);
+          //TODO: Check all return code...
+          Future(Created)
+        }
+
+      }
+      case e: JsError => {
+        Logger.debug("ERROR:" + e.toString)
+        Future(BadRequest("Record not found"))
+      }
+    }
+
+  }
+
+  def deleteBankHoliday = Action.async(parse.json) { request =>
+    val myID = request.body \ "id"
+    BankHoliday.delete(myID.as[Int])
+    Future(Ok)
+  }
+
 
 }

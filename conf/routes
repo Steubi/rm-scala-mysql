@@ -27,3 +27,5 @@ POST  /saveResource               controllers.Application.saveResource
 POST  /deleteResource	            controllers.Application.deleteResource
 GET   /getAllResourcesActivity    controllers.Application.getAllResourcesActivity
 GET   /getAllBankHolidays         controllers.Application.getAllBankHolidays
+POST  /saveBankHoliday            controllers.Application.saveBankHoliday
+POST  /deleteBankHoliday          controllers.Application.deleteBankHoliday

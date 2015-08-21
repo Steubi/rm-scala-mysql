@@ -30,7 +30,7 @@
     });
 
 
-   $scope.saveBankHoliday = function(data, index) {
+    $scope.saveBankHoliday = function(data, index) {
 
       return $http.post('/saveBankHoliday', data).
       success(function(dataResp, status, headers, config) {
@@ -48,12 +48,10 @@
       });
     };
 
-    // add resource to table, the saveResource function will save it on the server
+    // add bank holiday to table, the saveBankHoliday function will save it on the server
     $scope.addBankHoliday = function() {
-      $scope.inserted = {
-        id: -1
-      };
-      $scope.bankHolidays.push({id: -1, name: "New Name", location: "Madrid" });
+      $scope.inserted = {id: -1, date:"2025-06-15", name: "", location: "Madrid" };
+      $scope.bankHolidays.push($scope.inserted);
     };
 
     // delete bank holiday
@@ -136,7 +134,7 @@
           <tr ng-repeat="bankHoliday in bankHolidays  | filter:searchTable | orderBy:'date'">
             <td style="white-space: nowrap">
               <!-- form -->
-              <form editable-form name="rowform" onbeforesave="saveBankHoliday($data, $index)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == bankHoliday">
+              <form editable-form name="rowform" onbeforesave="saveBankHoliday($data, bankHolidays.indexOf(bankHoliday))" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == bankHoliday">
                 <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-success">
                   <span class="glyphicon glyphicon-ok"/>
                 </button>
@@ -157,7 +155,6 @@
               <span editable-date="bankHoliday.date" e-name="date" e-form="rowform">
                 {{  millisToUTCDate(bankHoliday.date) | date:'dd-MMM-yy' }}
               </span>
-
             </td>
             <td>
               <span editable-text="bankHoliday.name" e-name="name" e-form="rowform">
@@ -169,7 +166,6 @@
                 {{ bankHoliday.location || 'empty' }}
               </span>
             </td>
-
             <td style="white-space: nowrap">
               <div class="buttons" ng-show="!rowform.$visible">
                 <button class="btn btn-danger" ng-click="deleteBankHoliday(bankHoliday.id,bankHolidays.indexOf(bankHoliday))"><span class="glyphicon glyphicon-trash"></span></button>
