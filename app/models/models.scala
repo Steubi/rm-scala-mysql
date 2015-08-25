@@ -487,7 +487,7 @@ object GraphEntry {
   }
 }
 
-case class Vacation(id: Int, startDate: Date, endDate: Date, resourceID: Int, firstName: String, lastName: String, location: String)
+case class Vacation(id: Int, startDate: Date, endDate: Date, resourceID: Int, resourceName: String, firstName: String, lastName: String, location: String)
 
 object Vacation {
   /**
@@ -501,7 +501,8 @@ object Vacation {
     get[String]("RESOURCES.FIRST_NAME") ~
     get[String]("RESOURCES.LAST_NAME") ~
     get[String]("RESOURCES.LOCATION") map {
-      case id~startDate~endDate~resourceID~firstName~lastName~location => Vacation(id, startDate, endDate, resourceID, firstName, lastName, location)
+      case id~startDate~endDate~resourceID~firstName~lastName~location =>
+        Vacation(id, startDate, endDate, resourceID, firstName + " " + lastName, firstName, lastName, location)
     }
   }
 
@@ -515,6 +516,73 @@ object Vacation {
     }
   }
 
+  /**
+   * Retrieve all Vacations
+   */
+  def listAll(): List[Vacation] = {
+    DB.withConnection { implicit connection =>
+      SQL("select VACATIONS.ID,VACATIONS.START_DATE,VACATIONS.END_DATE,VACATIONS.RESOURCE_ID, RESOURCES.FIRST_NAME, RESOURCES.LAST_NAME, RESOURCES.LOCATION from VACATIONS, RESOURCES WHERE VACATIONS.RESOURCE_ID = RESOURCES.ID;").
+        as(vacationParser *)
+    }
+  }
+
+  /**
+   * Insert a new vacation.
+   *
+   * @param vacation The vacation values.
+   */
+  def insert(vacation: Vacation): Int = {
+
+    //Get new ID
+    val currentMaxId = DB.withConnection { implicit connection =>
+      SQL("select MAX(ID) from VACATIONS").as(SqlParser.int("MAX(ID)").single)
+    }
+
+    val newID = currentMaxId + 1
+
+    DB.withConnection { implicit connection =>
+      SQL(
+        """
+          insert into VACATIONS (
+            ID, START_DATE, END_DATE, RESOURCE_ID
+          ) values (
+            {id}, {startDate}, {endDate}, {resourceID}
+          )
+        """
+      ).on(
+        'id -> newID,
+        'startDate -> vacation.startDate,
+        'endDate -> vacation.endDate,
+        'resourceID -> vacation.resourceID
+      ).executeUpdate()
+    }
+
+    //Return the new ID
+    newID
+  }
+
+  /**
+   * Update a vacation.
+   *
+   * @param vacation The vacation values.
+   */
+  def update(vacation: Vacation) = {
+    DB.withConnection { implicit connection =>
+      SQL(
+        """
+          update VACATIONS
+          set RESOURCE_ID={resourceID}, START_DATE={startDate}, END_DATE={endDate}
+          where ID = {id}
+        """
+      ).on(
+        'id -> vacation.id,
+        'resourceID -> vacation.resourceID,
+        'startDate -> vacation.startDate,
+        'endDate -> vacation.endDate
+      ).executeUpdate()
+    }
+  }
+
   implicit val vacationWrites = new Writes[Vacation] {
     val format = new java.text.SimpleDateFormat("yyyy-MM-dd")
     def writes(vacation: Vacation) = Json.obj(
@@ -522,11 +590,23 @@ object Vacation {
       "startDate" -> format.format(vacation.startDate),
       "endDate" -> format.format(vacation.endDate),
       "resourceID" -> vacation.resourceID,
+      "resourceName" -> vacation.resourceName,
       "firstName" -> vacation.firstName,
       "lastName" -> vacation.lastName,
       "location" -> vacation.location
     )
   }
+
+  implicit val vacationReads: Reads[Vacation] = (
+    (JsPath \ "id").read[Int] and
+    (JsPath \ "startDate").read[Date] and
+    (JsPath \ "endDate").read[Date] and
+    (JsPath \ "resourceID").read[Int] and
+    (JsPath \ "resourceName").read[String] and
+    (JsPath \ "firstName").read[String] and
+    (JsPath \ "lastName").read[String] and
+    (JsPath \ "location").read[String]
+  )(Vacation.apply _)
 
 }
 

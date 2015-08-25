@@ -1,5 +1,273 @@
 <html>
 
-<h3>Vacations</h3>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Resoures Management NBU TIU - Bank Holidays</title>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+  <script type="text/javascript" src="http://vitalets.github.io/angular-xeditable/dist/js/xeditable.js"></script>
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"/>
+  <link rel="stylesheet" type="text/css" href="http://vitalets.github.io/angular-xeditable/dist/css/xeditable.css"/>
+  <script type="text/javascript" src="http://code.angularjs.org/1.0.8/angular-resource.js"></script>
+  <link rel="stylesheet" type="text/css" href="assets/stylesheets/main.css"/>
+
+
+  <script type="text/javascript">
+  var app = angular.module("app", ["xeditable", "ngResource"]);
+
+  app.run(function(editableOptions) {
+    editableOptions.theme = 'bs3';
+  });
+
+  app.controller('Ctrl', function($scope, $filter, $http) {
+
+
+    //Get the list of vacations
+    $http.get('/getAllVacations').then(function(res){
+      $scope.vacations = res.data;
+    });
+
+    //Get list of resources
+    $http.get('/getAllResources').then(function(res){
+      $scope.resources = res.data;
+    });
+
+    $scope.hideForm = true;
+
+    $scope.initNewVacation = function () {
+      $scope.newVacation = {id:-1,resourceID:0,startDate:"",endDate:""};
+      var today = new Date();
+      var dd = today.getDate();
+      var mm = today.getMonth()+1; //January is 0!
+      var yyyy = today.getFullYear();
+
+      if(dd<10) {
+          dd='0'+dd
+      }
+
+      if(mm<10) {
+          mm='0'+mm
+      }
+
+      $scope.newVacation.startDate = yyyy+'-'+mm+'-'+dd;
+      $scope.newVacation.endDate = $scope.newVacation.startDate;
+
+    };
+
+    $scope.initNewVacation();
+
+    $scope.showForm = function() {
+      $scope.hideForm = false;
+    };
+
+    $scope.cancelNewVacation = function() {
+      $scope.hideForm = true;
+      $scope.initNewVacation();
+    };
+
+
+    $scope.saveVacation = function(data, index) {
+
+      //We don't want to save the resourceName, firstName, lastName, location,
+      //but they are needed on the server side, so let's put some dummy values
+      data.resourceName = "NA";
+      data.firstName = "NA";
+      data.lastName = "NA";
+      data.location = "NA";
+
+      return $http.post('/saveVacation', data).
+      success(function(dataResp, status, headers, config) {
+        //If it is a new vacation which is saved, we need to read, and store, the id allocated to
+        // this new vacation
+        if (data.id == -1){
+          data.id = dataResp.id;
+          $scope.vacations.splice(index, 1);
+          $scope.vacations.push(data);
+        }
+      }).error(function(dataResp, status, headers, config) {
+        // called asynchronously if an error occurs
+        // or server returns response with an error status.
+        //TODO: Handle Error
+      });
+    };
+
+    // add bank holiday to table, the saveBankHoliday function will save it on the server
+    $scope.addBankHoliday = function() {
+      $scope.inserted = {id: -1, date:"2025-06-15", name: "", location: "Madrid" };
+      $scope.bankHolidays.push($scope.inserted);
+    };
+
+    // delete bank holiday
+    $scope.deleteBankHoliday = function(pID,index) {
+      var req = {
+        method: 'POST',
+        url: '/deleteBankHoliday',
+        headers: {'Content-Type': 'application/json'},
+        data: {id: pID}
+      };
+      $http(req).success(function(){
+        $scope.bankHolidays.splice(index, 1);
+      }).error(function(){
+        //TODO: Handle error
+      });
+    };
+
+    var toUTCDate = function(date){
+      var _utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),  date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+      return _utc;
+    };
+
+    var millisToUTCDate = function(millis){
+      return toUTCDate(new Date(millis));
+    };
+
+    $scope.toUTCDate = toUTCDate;
+    $scope.millisToUTCDate = millisToUTCDate;
+
+  });
+  </script>
+</head>
+<body>
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand">Resources Management</a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+          <li><a href="/">Home</a></li>
+          <li><a href="/projects">Projects</a></li>
+          <li><a href="/resources">Resources</a></li>
+          <li class="active"><a>Vacations</a></li>
+          <li><a href="/bankHolidays">Bank Holidays</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+  <div ng-app="app" ng-controller="Ctrl" class="ng-scope">
+    <!--Main search box. This search box applies to the whole table-->
+    <p >
+      <span class="glyphicon glyphicon-search"/>
+      <input type="text" ng-model="searchTable" class="searchBox"/>
+    </p>
+
+    <div class="row">
+      <div class="col-sm-12 col-md-10 col-lg-8">
+
+        <table class="table table-bordered table-hover rmTable">
+          <tr style="font-weight: bold">
+            <td></td>
+            <td style="display:none;">ID</td>
+            <td style="display:none;">Resource ID</td>
+            <td>Name</td>
+            <td>Start Date</td>
+            <td>End Date</td>
+            <td></td>
+          </tr>
+          <tr ng-repeat="vacation in vacations  | filter:searchTable">
+            <td style="white-space: nowrap">
+              <!-- form -->
+              <form editable-form name="rowform" onbeforesave="saveVacation($data, vacation.indexOf(bankHoliday))" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == vacation">
+                <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-success">
+                  <span class="glyphicon glyphicon-ok"/>
+                </button>
+                <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-warning">
+                  <span class="glyphicon glyphicon-remove"/>
+                </button>
+              </form>
+              <div class="buttons" ng-show="!rowform.$visible">
+                <button class="btn btn-primary" ng-click="rowform.$show()"><span class="glyphicon glyphicon-pencil"></span></button>
+              </div>
+            </td>
+            <td style="display:none;">
+              <span editable-text="vacation.id" e-name="id" e-form="rowform">
+                {{ vacation.id || 'empty' }}
+              </span>
+            </td>
+            <td style="display:none;">
+              <span editable-text="vacation.resourceID" e-name="resourceID" e-form="rowform">
+                {{ vacation.resourceID || 'empty' }}
+              </span>
+            </td>
+            <td>
+              <span e-name="resourceName" e-form="rowform">
+                {{ vacation.resourceName || 'empty' }}
+              </span>
+            </td>
+            <td>
+              <span editable-date="vacation.startDate" e-name="startDate" e-form="rowform">
+                {{  millisToUTCDate(vacation.startDate) | date:'dd-MMM-yy' }}
+              </span>
+            </td>
+            <td>
+              <span editable-date="vacation.endDate" e-name="endDate" e-form="rowform">
+                {{  millisToUTCDate(vacation.endDate) | date:'dd-MMM-yy' }}
+              </span>
+            </td>
+            <td style="white-space: nowrap">
+              <div class="buttons" ng-show="!rowform.$visible">
+                <button class="btn btn-danger" ng-click="deleteVacation(vacation.id,vacations.indexOf(vacation))"><span class="glyphicon glyphicon-trash"></span></button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="border: none">
+              <button class="btn btn-primary" ng-hide="!hideForm" ng-click="showForm()"><span class="glyphicon glyphicon-plus"></button>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- New Vacation Form-->
+    <div class="row">
+      <form editable-form class="form-horizontal" name="tableform" ng-hide="hideForm">
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Resource</label>
+          <div class="col-sm-10">
+            <select ng-model="newVacation.resourceID" ng-options="s.id as s.name for s in resources">
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Start Date:</label>
+          <div class="col-sm-10">
+            <input type="date" ng-model="newVacation.startDate" placeholder="Start Date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">End Date:</label>
+          <div class="col-sm-10">
+            <input type="date" ng-model="newVacation.endDate" placeholder="End Date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label"></label>
+          <div class="col-sm-10">
+            <button class="btn btn-warning" ng-click="cancelNewVacation()">
+              <span class="glyphicon glyphicon-remove"></span>
+            </button>
+
+            <button class="btn btn-success" ng-disabled="newVacation.resourceID == 0 || newVacation.startDate > newVacation.endDate" ng-click="saveVacation(newVacation,10)">
+              <span class="glyphicon glyphicon-save"></span>
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</body>
+
 
 </html>

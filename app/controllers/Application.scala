@@ -307,5 +307,46 @@ class Application extends Controller {
     Future(Ok)
   }
 
+  def getAllVacations() = Action {
+    val vacations = Vacation.listAll
+    Ok(Json.toJson(vacations).toString())
+  }
+
+  def saveVacation = Action.async(parse.json) { request =>
+    /*
+     * request.body is a JsValue.
+     * There is an implicit Writes that turns this JsValue as a JsObject,
+     * so you can call insert() with this JsValue.
+     * (insert() takes a JsObject as parameter, or anything that can be
+     * turned into a JsObject using a Writes.)
+     */
+
+
+    val vacationResult: JsResult[Vacation] =
+      request.body.validate[Vacation]
+
+    // Pattern matching
+    vacationResult match {
+      case s: JsSuccess[Vacation] => {
+        if (s.value.id == -1){
+          val newID = Vacation.insert(s.value);
+          // We need to return the new ID
+          Future(Created(Json.obj("id" -> newID)))
+        }
+        else{
+          Vacation.update(s.value);
+          //TODO: Check all return code...
+          Future(Created)
+        }
+
+      }
+      case e: JsError => {
+        Logger.debug("ERROR:" + e.toString)
+        Future(BadRequest("Bad object format:"  + e.toString))
+      }
+    }
+
+  }
+
 
 }

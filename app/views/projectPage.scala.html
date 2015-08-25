@@ -25,7 +25,7 @@
 
 			var app = angular.module("app", ["xeditable", "ngResource"]);
 
-			
+
 
 			app.run(function(editableOptions) {
 				editableOptions.theme = 'bs3';
@@ -36,7 +36,7 @@
 			app.controller('Ctrl', function($scope, $filter, $http) {
 
 				$scope.hideForm = true;
-				
+
 
 				$scope.initNewResourceSlot = function () {
 					$scope.newResourceSlot = {slotID:-1,projectID:0,resourceID:0,startDate:"",endDate:"",allocationPercentage:100,slotDescription:""};
@@ -47,11 +47,11 @@
 
 					if(dd<10) {
 					    dd='0'+dd
-					} 
+					}
 
 					if(mm<10) {
 					    mm='0'+mm
-					} 
+					}
 
 					$scope.newResourceSlot.startDate = yyyy+'-'+mm+'-'+dd;
 					$scope.newResourceSlot.endDate = $scope.newResourceSlot.startDate;
@@ -60,8 +60,8 @@
 
 				$scope.initNewResourceSlot();
 
-				
-				$http.get('\projectDetails?projectID=@myProject')
+
+				$http.get('/projectDetails?projectID=@myProject')
 	       			.then(function(res){
 	          				$scope.project = res.data;
 	          				$scope.newResourceSlot.projectID = $scope.project.id
@@ -70,7 +70,7 @@
 
 	       		$scope.user = {
 				    status: 2
-				}; 
+				};
 
 				$scope.resources = [
 				    {id: 1, name: 'Patrick'},
@@ -83,9 +83,9 @@
 	       			.then(function(res){
 	          				$scope.resources = res.data;
 
-	        	}); 
+	        	});
 
-				
+
 
 				/*$scope.priorities = [
 				{text: 'low'},
@@ -231,7 +231,7 @@
 
 			});
 
-			
+
 
 			app.directive('myTable', function () {
 	    r
@@ -251,7 +251,7 @@
 		    	<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
 			        <span class="icon-bar"></span>
 			        <span class="icon-bar"></span>
-			        <span class="icon-bar"></span> 
+			        <span class="icon-bar"></span>
 			    </button>
 		        <a class="navbar-brand">Resources Management</a>
 		    </div>
@@ -259,8 +259,9 @@
 			    <ul class="nav navbar-nav">
 			        <li><a href="/">Home</a></li>
 			        <li class="active"><a href="/projects">Projects</a></li>
-			        <li><a href="/resources">Resources</a></li> 
-			        <li><a href="#">Vacations</a></li> 
+			        <li><a href="/resources">Resources</a></li>
+			        <li><a href="/vacations">Vacations</a></li>
+			        <li><a href="/bankHolidays">Bank Holidays</a></li>
 			    </ul>
 		        <ul class="nav navbar-nav navbar-right">
 		            <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
@@ -268,7 +269,7 @@
 		    </div>
 		  </div>
 		</nav>
-	
+
 
 		<div ng-app="app" ng-controller="Ctrl" class="ng-scope">
 			<!--<h3>Project Details</h3>-->
@@ -411,8 +412,8 @@
 								{{ resource.resourceID || 'empty' }}
 
 		            </td>
-					<td>		
-								<!--Resource Name-->		
+					<td>
+								<!--Resource Name-->
 								{{ resource.firstName || 'empty' }} {{ resource.lastName || 'empty' }}
 					<td>
 								{{ resource.location || 'empty' }}
@@ -456,9 +457,9 @@
 
 	    	</table>
 
-		
 
-		
+
+
 
 
 		<form editable-form class="form-horizontal" name="tableform" ng-hide="hideForm">
@@ -468,7 +469,7 @@
 		    	<select ng-model="newResourceSlot.resourceID" ng-options="s.id as s.name for s in resources">
 	    		</select>
 		    </div>
-		  </div> 
+		  </div>
 		  <div class="form-group">
 		    <label class="col-sm-2 control-label">Start Date:</label>
 		    <div class="col-sm-10">
