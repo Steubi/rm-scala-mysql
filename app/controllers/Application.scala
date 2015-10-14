@@ -106,9 +106,23 @@ class Application extends Controller {
         Ok(Json.toJson(project).toString())
       case None => BadRequest("Record not found")
     }
+  }
+
+  def resourcePage(resourceID: Int) = Action{
+    Ok(views.html.resourcePage(resourceID))
+  }
+
+  def resourceDetails(resourceID: Int) = Action {
+
+    val project = ProjectDetails.findById(resourceID)
 
 
-
+    project match {
+      case Some(project) => project
+        project.calculateTotalMDAllocatedAndGraph
+        Ok(Json.toJson(project).toString())
+      case None => BadRequest("Record not found")
+    }
   }
 
 
@@ -180,7 +194,7 @@ class Application extends Controller {
   }
 
   def resourcesPage() = Action{
-    Ok(views.html.resourcePage())
+    Ok(views.html.resourcesPage())
   }
 
   def saveResource = Action.async(parse.json) { request =>

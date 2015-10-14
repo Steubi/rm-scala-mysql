@@ -1,184 +1,536 @@
+@(myResource: Int)
+
 <html>
+
 <head>
-	<title>Resources - Resources Management</title>
-	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
-	<script type="text/javascript" src="http://vitalets.github.io/angular-xeditable/dist/js/xeditable.js"></script>
-	<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-	<link rel="stylesheet" type="text/css" href="http://vitalets.github.io/angular-xeditable/dist/css/xeditable.css">
-	<script type="text/javascript" src="http://code.angularjs.org/1.0.8/angular-resource.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.js"></script>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Resources Management</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+    <script type="text/javascript" src="http://vitalets.github.io/angular-xeditable/dist/js/xeditable.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="http://vitalets.github.io/angular-xeditable/dist/css/xeditable.css">
+    <script type="text/javascript" src="http://code.angularjs.org/1.0.8/angular-resource.js"></script>
+  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.js"></script>
+  	<script src="http://code.highcharts.com/highcharts.js"></script>
+	<script src="http://code.highcharts.com/modules/exporting.js"></script>
 	<link rel="stylesheet" type="text/css" href="assets/stylesheets/main.css">
 
-	<script type="text/javascript">
-	var app = angular.module("app", ["xeditable", "ngResource"]);
-
-	app.run(function(editableOptions) {
-		editableOptions.theme = 'bs3';
-	});
-
-	app.controller('Ctrl', function($scope, $filter, $http) {
-
-		//Define constants
-		$scope.locations = ["Chicago","Francfort","Madrid","Miami","Nice","Waltham"];
-		$scope.role = ["Data Scientist","Pre Sales","Sales","Solution Manager"]
+	<!--<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>-->
 
 
-		//Get the list of resources
-		$http.get('\getAllResources').then(function(res){
-			$scope.resources = res.data;
-		});
 
 
-		$scope.saveResource = function(data, index) {
-			data.estimatedSizing = parseInt(data.estimatedSizing);
+	<script type="text/javascript">//<![CDATA[
 
-			return $http.post('/saveResource', data).
-			success(function(dataResp, status, headers, config) {
-				//If it is a new resource which is saved, we need to read, and store, the id allocated to
-				// this new resource
-				if (data.id == -1){
-					data.id = dataResp.id;
-					$scope.resources.splice(index, 1);
-					$scope.resources.push(data);
+			var app = angular.module("app", ["xeditable", "ngResource"]);
+
+
+
+			app.run(function(editableOptions) {
+				editableOptions.theme = 'bs3';
+			});
+
+
+
+			app.controller('Ctrl', function($scope, $filter, $http) {
+
+				$scope.hideForm = true;
+
+
+				$scope.initNewResourceSlot = function () {
+					$scope.newResourceSlot = {slotID:-1,projectID:0,resourceID:0,startDate:"",endDate:"",allocationPercentage:100,slotDescription:""};
+					var today = new Date();
+					var dd = today.getDate();
+					var mm = today.getMonth()+1; //January is 0!
+					var yyyy = today.getFullYear();
+
+					if(dd<10) {
+					    dd='0'+dd
+					}
+
+					if(mm<10) {
+					    mm='0'+mm
+					}
+
+					$scope.newResourceSlot.startDate = yyyy+'-'+mm+'-'+dd;
+					$scope.newResourceSlot.endDate = $scope.newResourceSlot.startDate;
+
+				};
+
+				$scope.initNewResourceSlot();
+
+
+				$http.get('/projectDetails?projectID=@myResource')
+	       			.then(function(res){
+	          				$scope.project = res.data;
+	          				$scope.newResourceSlot.projectID = $scope.project.id
+	          				loadGraph();
+	        	});
+
+	       		$scope.user = {
+				    status: 2
+				};
+
+				$scope.resources = [
+				    {id: 1, name: 'Patrick'},
+				    {id: 2, name: 'Toby'},
+				    {id: 3, name: 'Stephane'},
+				    {id: 4, name: 'Sebastien'}
+				];
+
+				$http.get('\getAllResources')
+	       			.then(function(res){
+	          				$scope.resources = res.data;
+
+	        	});
+
+
+
+				/*$scope.priorities = [
+				{text: 'low'},
+				{text: 'high'},
+				{text: 'medium'}
+			  ];*/
+			  $scope.priorities = ["low","high","medium"];
+
+			  $scope.statuses = ["committed","completed","planned","released","requested","to request"];
+
+			  $scope.yesNo = ["yes","no"];
+
+			  $scope.customerTypes = ["3rd Party","Airline","Airport","Corporation","Cruise","Gov Body","OLTA","Other","TMC","Tour Operator", "Travel Agency"];
+
+				$scope.saveSlot = function(data, index) {
+					data.allocationPercentage = parseInt(data.allocationPercentage)
+
+					return $http.post('/saveSlot', data).
+						  success(function(dataResp, status, headers, config) {
+							// this callback will be called asynchronously
+							// when the response is available
+							location.reload();
+						  }).
+						  error(function(dataResp, status, headers, config) {
+							// called asynchronously if an error occurs
+							// or server returns response with an error status.
+						  });
+				};
+
+				$scope.saveNewSlot = function() {
+					$scope.newResourceSlot.allocationPercentage = parseInt($scope.newResourceSlot.allocationPercentage)
+					$scope.newResourceSlot.resourceID = parseInt($scope.newResourceSlot.resourceID)
+
+					return $http.post('/saveNewSlot', $scope.newResourceSlot).
+						  success(function(dataResp, status, headers, config) {
+							// this callback will be called asynchronously
+							// when the response is available
+							location.reload();
+						  }).
+						  error(function(dataResp, status, headers, config) {
+							// called asynchronously if an error occurs
+							// or server returns response with an error status.
+						  });
+				};
+
+				$scope.refreshSlots = function(){
+					//$scope.$apply();
 				}
-			}).error(function(dataResp, status, headers, config) {
-				// called asynchronously if an error occurs
-				// or server returns response with an error status.
-				//TODO: Handle Error
+
+				// remove project
+				$scope.removeSlot = function(pID,index) {
+					var req = {
+						 method: 'POST',
+						 url: '/deleteSlot',
+						 headers: {'Content-Type': 'application/json'},
+						 data: {slotID: pID}
+					};
+
+					$http(req).success(function(){
+						$scope.project.resources.splice(index, 1);
+						location.reload();
+					}).error(function(){});
+
+					//var obj = JSON.parse('{projectID: 8}');
+					//return $http.post('/deleteProject', obj);
+				};
+
+				// add project
+				$scope.addProject = function() {
+					$scope.inserted = {
+						projectID: "NEW"
+					};
+					$scope.projects.push($scope.inserted);
+				};
+
+
+				function loadGraph() {
+				    $('#container').highcharts({
+				        chart: {
+				            type: 'column'
+				        },
+				        title: {
+				            text: 'Resources Allocation'
+				        },
+				        xAxis: {
+				            categories: $scope.project.graphEntry.columns			        },
+				        yAxis: {
+				            min: 0,
+				            title: {
+				                text: 'Allocation (MD)'
+				            },
+				            stackLabels: {
+				                enabled: false,
+				                style: {
+				                    fontWeight: 'bold',
+				                    color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+				                }
+				            }
+				        },
+				        legend: {
+				            align: 'right',
+				            x: -30,
+				            verticalAlign: 'top',
+				            y: 25,
+				            floating: true,
+				            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || 'white',
+				            borderColor: '#CCC',
+				            borderWidth: 1,
+				            shadow: false
+				        },
+				        tooltip: {
+				            formatter: function () {
+				                return '<b>' + this.x + '</b><br/>' +
+				                    this.series.name + ': ' + this.y + '<br/>' +
+				                    'Total: ' + this.point.stackTotal;
+				            }
+				        },
+				        plotOptions: {
+				            column: {
+				                stacking: 'normal',
+				                dataLabels: {
+				                    enabled: false,
+				                    color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white',
+				                    style: {
+				                        textShadow: '0 0 3px black'
+				                    }
+				                }
+				            }
+				        },
+				        series: $scope.project.graphEntry.series
+				    });
+				};
+
+				$scope.showForm = function() {
+					$scope.hideForm = false;
+				};
+
+				$scope.cancelNewSlot = function() {
+					$scope.hideForm = true;
+					$scope.initNewResourceSlot();
+				};
+
+
 			});
-		};
 
-		// add resource to table, the saveResource function will save it on the server
-		$scope.addResource = function() {
-			$scope.inserted = {
-				id: -1
-			};
-			$scope.resources.push($scope.inserted);
-		};
 
-		// remove resource
-		$scope.removeResource = function(pID,index) {
-			var req = {
-				method: 'POST',
-				url: '/deleteResource',
-				headers: {'Content-Type': 'application/json'},
-				data: {id: pID}
-			};
-			$http(req).success(function(){
-				$scope.resources.splice(index, 1);
-			}).error(function(){
-				//TODO: Handle error
-			});
-		};
 
+			app.directive('myTable', function () {
+	    r
 	});
+
+
+	//]]>
+
 	</script>
+	</head>
 
-</head>
-<body>
-	<nav class="navbar navbar-default">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand">Resources Management</a>
+
+	<body>
+		<nav class="navbar navbar-default">
+		  <div class="container-fluid">
+		    <div class="navbar-header">
+		    	<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+			        <span class="icon-bar"></span>
+			        <span class="icon-bar"></span>
+			        <span class="icon-bar"></span>
+			    </button>
+		        <a class="navbar-brand">Resources Management</a>
+		    </div>
+		    <div class="collapse navbar-collapse" id="myNavbar">
+			    <ul class="nav navbar-nav">
+			        <li><a href="/">Home</a></li>
+			        <li class="active"><a href="/projects">Projects</a></li>
+			        <li><a href="/resources">Resources</a></li>
+			        <li><a href="/vacations">Vacations</a></li>
+			        <li><a href="/bankHolidays">Bank Holidays</a></li>
+			    </ul>
+		        <ul class="nav navbar-nav navbar-right">
+		            <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+		        </ul>
+		    </div>
+		  </div>
+		</nav>
+
+
+		<div ng-app="app" ng-controller="Ctrl" class="ng-scope">
+			<!--<h3>Project Details</h3>-->
+			<br/>
+			<!--<div class="row">
+				<div class="col-md-6">
+					<table class="table table-bordered table-hover table-condensed rmTable" width="600">
+					    <tbody>
+					      <tr>
+					        <td style="font-weight: bold">Project Name:</td>
+					        <td>{{project.projectName}}</td>
+					      </tr>
+					      <tr>
+					        <td style="font-weight: bold">Customer Name:</td>
+					        <td>{{project.customerName}}</td>
+					      </tr>
+					      <tr>
+					        <td style="font-weight: bold">High Level Scope:</td>
+					        <td>{{project.highLevelScope}}</td>
+					      </tr>
+					      <tr>
+					        <td style="font-weight: bold">Sizing:</td>
+					        <td>{{project.sizing}}</td>
+					      </tr>
+					      <tr>
+					        <td style="font-weight: bold">Resources Allocated (MD):</td>
+					        <td>{{project.resourcesAllocatedMD}}</td>
+					      </tr>
+					    </tbody>
+				    </table>
+			    </div>
+			</div>-->
+
+			<div class="row">
+				<div class="col-md-2">
+					<label>Project Name:</label>
+				</div>
+				<div class="col-md-4">
+					{{project.projectName}}
+				</div>
 			</div>
-			<div class="collapse navbar-collapse" id="myNavbar">
-				<ul class="nav navbar-nav">
-					<li><a href="/">Home</a></li>
-					<li><a href="/projects">Projects</a></li>
-					<li class="active"><a>Resources</a></li>
-					<li><a href="/vacations">Vacations</a></li>
-					<li><a href="/bankHolidays">Bank Holidays</a></li>
-				</ul>
-				<ul class="nav navbar-nav navbar-right">
-					<li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
-				</ul>
+			<div class="row">
+				<div class="col-md-2">
+					<label>Customer Name:</label>
+				</div>
+				<div class="col-md-4">
+					{{project.customerName}}
+				</div>
 			</div>
-		</div>
-	</nav>
+			<div class="row">
+				<div class="col-md-2">
+					<label>High Level Scope:</label>
+				</div>
+				<div class="col-md-4">
+					{{project.highLevelScope}}
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2">
+					<label>Sizing:</label>
+				</div>
+				<div class="col-md-4">
+					{{project.sizing}}
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2">
+					<label>Resources Allocated (MD):</label>
+				</div>
+				<div class="col-md-4">
+					{{project.resourcesAllocatedMD}}
+				</div>
+			</div>
+			<br/>
+			<br/>
 
-	<div ng-app="app" ng-controller="Ctrl" class="ng-scope">
-		<!--Main search box. This search box applies to the whole table-->
-		<p >
-			<span class="glyphicon glyphicon-search"/>
-			<input type="text" ng-model="searchTable" class="searchBox"/>
-		</p>
 
-		<div class="row">
-			<div class="col-sm-12 col-md-10 col-lg-8">
+			<div class="row" ng-repeat="bankHoliday in project.bankHolidays">
+				<div class="col-md-1"></div>
+				<div class="col-md-5 col-sm-9 alert alert-info" role="alert">
+					INFO: There is a bank holiday in {{bankHoliday.location}} on the {{bankHoliday.date}}: {{bankHoliday.name}}
+				</div>
+			</div>
+			<div class="row" ng-repeat="vacation in project.vacations">
+				<div class="col-md-1"></div>
+				<div class="col-md-5 col-sm-9 alert alert-danger" role="alert">
+					WARNING: {{vacation.firstName}} is taking vacations from the {{vacation.startDate}} to the {{vacation.endDate}}
+				</div>
+			</div>
 
-				<table class="table table-bordered table-hover rmTable">
-					<tr style="font-weight: bold">
-						<td></td>
-						<td style="display:none;">ID</td>
-						<td>First Name</td>
-						<td>Last Name</td>
-						<td>Location</td>
-						<td>Position</td>
-						<td></td>
-					</tr>
-					<tr ng-repeat="resource in resources  | filter:searchTable | orderBy:'firstName'">
-						<td style="white-space: nowrap">
-							<!-- form -->
-							<form editable-form name="rowform" onbeforesave="saveResource($data, $index)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == resource">
-								<button type="submit" ng-disabled="rowform.$waiting" class="btn btn-success">
-									<span class="glyphicon glyphicon-ok"/>
-								</button>
-								<button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-warning">
-									<span class="glyphicon glyphicon-remove"/>
-								</button>
-							</form>
-							<div class="buttons" ng-show="!rowform.$visible">
-								<button class="btn btn-primary" ng-click="rowform.$show()"><span class="glyphicon glyphicon-pencil"></span></button>
-							</div>
-						</td>
-						<td style="display:none;">
-							<span editable-text="resource.id" e-name="id" e-form="rowform">
-								{{ resource.id || 'empty' }}
-							</span>
-						</td>
-						<td>
-							<span editable-text="resource.firstName" e-name="firstName" e-form="rowform">
-								{{ resource.firstName || 'empty' }}
-							</span>
 
-						</td>
-						<td>
-							<span editable-text="resource.lastName" e-name="lastName" e-form="rowform">
-								{{ resource.lastName || 'empty' }}
-							</span>
-						</td>
-						<td>
-							<span editable-text="resource.location" e-name="location" e-form="rowform">
+			<br/>
+			<br/>
+
+		    <table class="table table-bordered table-hover rmTable">
+		        <tr style="font-weight: bold">
+		            <td></td>
+		 			<td style="display:none;">Slot ID</td>
+		 			<td style="display:none;">Project ID</td>
+					<td style="display:none;">Resource ID</td>
+					<td>Name</td>
+		            <td>Location</td>
+					<td>Role</td>
+					<td>Start Date</td>
+					<td>End Date</td>
+					<td>Allocation</td>
+					<td>Description</td>
+		            <td></td>
+	        	</tr>
+		        <tr ng-repeat="resource in project.resources | orderBy:'firstName'">
+		            <td style="white-space: nowrap">
+		                <!-- form -->
+		                <form editable-form name="rowform" onbeforesave="saveSlot($data, $index)" onaftersave="refreshSlots()" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == project">
+		                    <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-success">
+		                        <span class="glyphicon glyphicon-ok">
+		                    </button>
+		                    <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-warning">
+		                        <span class="glyphicon glyphicon-remove">
+		                    </button>
+		                </form>
+		                <div class="buttons" ng-show="!rowform.$visible">
+		                    <button class="btn btn-primary" ng-click="rowform.$show()"><span class="glyphicon glyphicon-pencil"></button>
+		                </div>
+		            </td>
+		            <td style="display:none;">
+						<!-- editable username (text with validation) -->
+								<span editable-text="resource.slotID" e-name="slotID" e-form="rowform">
+								{{ resource.slotID || 'empty' }}
+
+		            </td>
+		            <td style="display:none;">
+						<!-- editable username (text with validation) -->
+								<span editable-text="resource.projectID" e-name="projectID" e-form="rowform">
+								{{ resource.projectID || 'empty' }}
+
+		            </td>
+					<td style="display:none;">
+						<!-- editable username (text with validation) -->
+								<span editable-text="resource.resourceID" e-name="resourceID" e-form="rowform">
+								{{ resource.resourceID || 'empty' }}
+
+		            </td>
+					<td>
+								<!--Resource Name-->
+								{{ resource.firstName || 'empty' }} {{ resource.lastName || 'empty' }}
+					<td>
 								{{ resource.location || 'empty' }}
-							</span>
-						</td>
-						<td>
-							<span editable-text="resource.position" e-name="position" e-form="rowform">
+					</td>
+					<td>
 								{{ resource.position || 'empty' }}
-							</span>
-						</td>
+					</td>
+					<td>
+								<span editable-date="resource.startDate" e-name="startDate" e-form="rowform">
+								{{ resource.startDate || 'empty' }}
+								</span>
+					</td>
+					<td>
+								<span editable-date="resource.endDate" e-name="endDate" e-form="rowform">
+								{{ resource.endDate || 'empty' }}
+								</span>
+					</td>
+					<td>
+								<span editable-text="resource.allocationPercentage" e-name="allocationPercentage" e-form="rowform">
+								{{ resource.allocationPercentage || 'empty' }}
+								</span>
+					</td>
+					<td>
+								<span editable-textarea="resource.slotDescription" e-name="slotDescription" e-form="rowform">
+								{{ resource.slotDescription}}
+								</span>
+					</td>
 
-						<td style="white-space: nowrap">
-							<div class="buttons" ng-show="!rowform.$visible">
-								<button class="btn btn-danger" ng-click="removeResource(resource.id,resources.indexOf(resource))"><span class="glyphicon glyphicon-trash"></span></button>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td style="border: none">
-							<button class="btn btn-primary" ng-click="addResource()"><span class="glyphicon glyphicon-plus"></span></button>
-						</td>
-					</tr>
-				</table>
+		            <td style="white-space: nowrap">
+		                <div class="buttons" ng-show="!rowform.$visible">
+		                    <button class="btn btn-danger" ng-click="removeSlot(resource.slotID,$index)"><span class="glyphicon glyphicon-trash"></span></button>
+		                </div>
+		            </td>
+		        </tr>
+		        <tr>
+		        	<td  style="border: none">
+			        	<button class="btn btn-primary" ng-hide="!hideForm" ng-click="showForm()"><span class="glyphicon glyphicon-plus"></button>
+					</td>
+		        </tr>
+
+
+	    	</table>
+
+
+
+
+
+
+		<form editable-form class="form-horizontal" name="tableform" ng-hide="hideForm">
+		  <div class="form-group">
+		    <label class="col-sm-2 control-label">Resource</label>
+		    <div class="col-sm-10">
+		    	<select ng-model="newResourceSlot.resourceID" ng-options="s.id as s.name for s in resources">
+	    		</select>
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label class="col-sm-2 control-label">Start Date:</label>
+		    <div class="col-sm-10">
+		    <input type="date" ng-model="newResourceSlot.startDate" placeholder="Start Date">
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label class="col-sm-2 control-label">End Date:</label>
+		    <div class="col-sm-10">
+		    <input type="date" ng-model="newResourceSlot.endDate" placeholder="End Date">
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label class="col-sm-2 control-label">Allocation Percentage:</label>
+		    <div class="col-sm-10">
+		    <input type="text" ng-model="newResourceSlot.allocationPercentage" placeholder="Allocation (%)">
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label class="col-sm-2 control-label">Description:</label>
+		    <div class="col-sm-10">
+		    <input type="text" ng-model="newResourceSlot.slotDescription" placeholder="Enter description (optional)">
+		    </div>
+		  </div>
+
+		  <div class="form-group">
+		  		<label class="col-sm-2 control-label"></label>
+		  		<div class="col-sm-10">
+					<button class="btn btn-warning" ng-click="cancelNewSlot()">
+						<span class="glyphicon glyphicon-remove"></span>
+					</button>
+
+					<button class="btn btn-success" ng-disabled="newResourceSlot.resourceID == 0 || newResourceSlot.startDate > newResourceSlot.endDate" ng-click="saveNewSlot()">
+						<span class="glyphicon glyphicon-save"></span>
+					</button>
+				</div>
 			</div>
+
+		</form>
+
+		<hr>
+
 		</div>
-	</div>
-</body>
+
+
+		<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+
+
+
+
+
+
+
+
+	</body>
+
+
+<script type="text/javascript">
+
+
+
+</script>
+
 </html>

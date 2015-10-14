@@ -7,6 +7,7 @@ GET   /                           controllers.Application.index
 GET   /projects                   controllers.Application.projects
 GET   /projectPage                controllers.Application.projectPage(projectID: Int ?=0)
 GET   /resources                  controllers.Application.resourcesPage
+GET   /resourcePage               controllers.Application.resourcePage(resourceID: Int ?=0)
 GET   /vacations                  controllers.Application.vacationsPage
 GET   /bankHolidays               controllers.Application.bankHolidaysPage
 
@@ -31,3 +32,4 @@ POST  /saveBankHoliday            controllers.Application.saveBankHoliday
 POST  /deleteBankHoliday          controllers.Application.deleteBankHoliday
 GET   /getAllVacations            controllers.Application.getAllVacations
 POST  /saveVacation               controllers.Application.saveVacation
+GET   /resourceDetails            controllers.Application.resourceDetails(resourceID: Int ?=0)
