@@ -112,15 +112,14 @@ class Application extends Controller {
     Ok(views.html.resourcePage(resourceID))
   }
 
-  def resourceDetails(resourceID: Int) = Action {
+  def getResourceDetails(resourceID: Int) = Action {
 
-    val project = ProjectDetails.findById(resourceID)
+    val resource = ResourceProjectsSlots.findById(resourceID)
 
 
-    project match {
-      case Some(project) => project
-        project.calculateTotalMDAllocatedAndGraph
-        Ok(Json.toJson(project).toString())
+    resource match {
+      case Some(resource) => resource
+        Ok(Json.toJson(resource).toString())
       case None => BadRequest("Record not found")
     }
   }

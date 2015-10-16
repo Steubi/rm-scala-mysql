@@ -145,6 +145,8 @@ object Resource{
 
 }
 
+
+
 case class Slot(slotID:Int, resourceID:Int, projectID: Int, startDate: Date, endDate: Date, allocationPercentage: Int, slotDescription: String)
 
 object Slot{
@@ -171,6 +173,16 @@ object Slot{
   def findByProjectID(id: Integer): List[Slot] = {
     DB.withConnection { implicit connection =>
       SQL("select * from SLOTS where PROJECT_ID = {id}").on('id -> id).as(slotParser *)
+    }
+  }
+
+  /**
+   * Retrieve all Slots for a project id and resource id.
+   */
+  def findByProjectAndResourceID(projectID: Integer, resourceID: Integer): List[Slot] = {
+    DB.withConnection { implicit connection =>
+      SQL("select * from SLOTS where PROJECT_ID = {pid} and RESOURCE_ID = {rid}").
+        on('pid -> projectID,'rid -> resourceID).as(slotParser *)
     }
   }
 
@@ -1100,6 +1112,92 @@ object CalendarEntry {
     def writes(entry: CalendarEntry) = Json.obj(
       "date" -> format.format(entry.date),
       "value" -> entry.value
+    )
+  }
+
+}
+
+
+case class ProjectAndSlotsForResource(id: Int, projectName: String, customerName: String,
+   slotStatus: String, slots: List[Slot])
+
+object ProjectAndSlotsForResource{
+
+  /**
+   * Parse a Project from a ResultSet
+   */
+  val projectAndSlotsForResourceParser = {
+    get[Int]("PROJECTS.ID") ~
+    get[String]("PROJECTS.PROJECT_NAME") ~
+    get[String]("PROJECTS.CUSTOMER_NAME") ~
+    get[String]("PROJECTS.SLOT_STATUS") ~
+    get[Int]("SLOTS.RESOURCE_ID")  map {
+      case pid~projectName~customerName~slotStatus~rid
+      => ProjectAndSlotsForResource(pid, projectName, customerName, slotStatus,Slot.findByProjectAndResourceID(pid,rid))
+    }
+  }
+
+  /**
+   * Retrieve all projects
+   *
+   */
+  def listResourceProjects(resourceID: Integer): List[ProjectAndSlotsForResource]={
+    DB.withConnection { implicit connection =>
+      SQL("select PROJECTS.ID, PROJECTS.PROJECT_NAME, PROJECTS.CUSTOMER_NAME, PROJECTS.SLOT_STATUS, SLOTS.RESOURCE_ID from PROJECTS,SLOTS where PROJECTS.ID=SLOTS.PROJECT_ID AND SLOTS.RESOURCE_ID={id} group by PROJECTS.ID").on('id -> resourceID).as(projectAndSlotsForResourceParser *)
+    }
+  }
+
+
+  implicit val projectAndSlotsForResourceWrites = new Writes[ProjectAndSlotsForResource] {
+    val format = new java.text.SimpleDateFormat("yyyy-MM-dd")
+    def writes(project: ProjectAndSlotsForResource) = Json.obj(
+      "id" -> project.id,
+      "projectName" -> project.projectName,
+      "customerName" -> project.customerName,
+      "slotStatus" -> project.slotStatus,
+      "slots" -> project.slots
+    )
+  }
+}
+
+
+case class ResourceProjectsSlots(id: Int, firstName: String, lastName: String, position: String, location:String,
+        projects: List[ProjectAndSlotsForResource])
+
+object ResourceProjectsSlots{
+
+  /**
+   * Parse a Resource from a ResultSet
+   */
+  val resourceProjectsSlotsParser = {
+    get[Int]("RESOURCES.ID") ~
+    get[String]("RESOURCES.FIRST_NAME") ~
+    get[String]("RESOURCES.LAST_NAME") ~
+    get[String]("RESOURCES.POSITION") ~
+    get[String]("RESOURCES.LOCATION") map {
+      case id~firstName~lastName~position~location => ResourceProjectsSlots(id, firstName,
+        lastName, position, location, ProjectAndSlotsForResource.listResourceProjects(id))
+    }
+  }
+
+  /**
+   * Retrieve a Resource from the id.
+   */
+  def findById(id: Integer): Option[ResourceProjectsSlots] = {
+    DB.withConnection { implicit connection =>
+      SQL("select * from RESOURCES where ID = {id}").on('id -> id).as(resourceProjectsSlotsParser.singleOpt)
+    }
+  }
+
+  implicit val resourceProjectsSlotsWrites = new Writes[ResourceProjectsSlots] {
+    def writes(resource: ResourceProjectsSlots) = Json.obj(
+      "id" -> resource.id,
+      "name" -> (resource.firstName + " " + resource.lastName).toString,
+      "firstName" -> resource.firstName,
+      "lastName" -> resource.lastName,
+      "position" -> resource.position,
+      "location" -> resource.location,
+      "projects" -> resource.projects
     )
   }
 
