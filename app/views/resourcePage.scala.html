@@ -21,8 +21,65 @@
   <script type="text/javascript">
 
   var app = angular.module("app", ["xeditable", "ngResource"]);
+  var today = new Date();
+  var endDate = new Date();
+  endDate.setDate(today.getDate()+21);
 
+  function calculateData(res){
+    var currentDate = new Date();
+    var newData = {dates:[],projects:[]};
+    while (currentDate < endDate){
+      var newDate = {date:""};
+      newDate.date = "" + currentDate.getDate() + "/" + (currentDate.getMonth()+1);
+      newData.dates.push(newDate);
+      currentDate.setDate(currentDate.getDate()+1);
+    };
+    res.projects.forEach(function(project){
+      var newProject = {name:"",daysPercent:[]};
+      var projectValid = false;
+      newProject.name = project.projectName;
 
+      currentDate = new Date();
+      while (currentDate < endDate){
+        var newDayPercent = {value:0};
+        console.log("Current Date:" + currentDate.toDateString());
+        project.slots.forEach(function(slot){
+          //date = new Date();
+          var startDate = new Date(slot.startDate);
+          var endDate = new Date(slot.endDate);
+          //console.log(startDate.toDateString());
+          //console.log(endDate.toDateString());
+          var day = "";
+          if (currentDate.getDate()<10){
+            day ="0"+currentDate.getDate();
+          } else {
+            day = "" + currentDate.getDate();
+          }
+          var month = "";
+          if (currentDate.getMonth()<9){
+            month ="0"+(currentDate.getMonth() + 1);
+          } else {
+            month = "" + (currentDate.getMonth()+1);
+          }
+          var cDate = "" + currentDate.getFullYear() + "-" + month + "-" + day;
+          console.log("cDate:" + cDate);
+          if ((cDate >= slot.startDate) & (cDate <= slot.endDate)){
+            newDayPercent.value = newDayPercent.value + slot.allocationPercentage;
+            console.log(newDayPercent.toString());
+            projectValid = true;
+            //console.log(currentDate);
+          };
+        });
+        newProject.daysPercent.push(newDayPercent);
+        currentDate.setDate(currentDate.getDate()+1);
+      };
+      if (projectValid){
+        newData.projects.push(newProject);
+      };
+
+    });
+    return newData;
+  };
 
   app.run(function(editableOptions) {
     editableOptions.theme = 'bs3';
@@ -38,6 +95,7 @@
     $http.get('/getResourceDetails?resourceID=@myResource')
     .then(function(res){
       $scope.resource = res.data;
+      $scope.planningData = calculateData($scope.resource);
       //loadGraph();
     });
 
@@ -106,6 +164,17 @@
     <br/>
     <br/>
 
+    <h4>Next 3 weeks planning</h4>
+    <table class="table table-bordered table-hover rmTable">
+      <tr>
+        <td><b>Project</b></td>
+        <td ng-repeat="date in planningData.dates"><b>{{date.date}}</b></td>
+      </tr>
+      <tr ng-repeat="project in planningData.projects">
+        <td><b>{{project.name}}</b></td>
+        <td ng-repeat="dayPercent in project.daysPercent"> {{dayPercent.value}}</td>
+      </tr>
+    </table>
 
     <div class="row" ng-repeat="bankHoliday in project.bankHolidays">
       <div class="col-md-1"></div>
@@ -123,8 +192,22 @@
 
     <div ng-repeat="project in resource.projects">
       <h3><a href="projectPage?projectID={{project.id}}">{{project.projectName}}</a></h3>
-      Customer: {{project.customerName}}<br/>
-      Status: {{project.slotStatus}}<br/>
+      <div class="row">
+        <div class="col-md-1">
+          <label>Customer:</label>
+        </div>
+        <div class="col-md-4">
+          {{project.customerName}}
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-1">
+          <label>Status:</label>
+        </div>
+        <div class="col-md-4">
+          {{project.slotStatus}}
+        </div>
+      </div>
       <table class="table table-bordered table-hover rmTable">
         <tr style="font-weight: bold">
           <td>Start Date</td>
@@ -133,26 +216,10 @@
           <td>Description</td>
         </tr>
         <tr ng-repeat="slot in project.slots | orderBy:'startDate'">
-          <td>
-            <span editable-date="resource.startDate" e-name="startDate" e-form="rowform">
-              {{ slot.startDate || 'empty' }}
-            </span>
-          </td>
-          <td>
-            <span editable-date="resource.endDate" e-name="endDate" e-form="rowform">
-              {{ slot.endDate || 'empty' }}
-            </span>
-          </td>
-          <td>
-            <span editable-text="resource.allocationPercentage" e-name="allocationPercentage" e-form="rowform">
-              {{ slot.allocationPercentage || 'empty' }}
-            </span>
-          </td>
-          <td>
-            <span editable-textarea="resource.slotDescription" e-name="slotDescription" e-form="rowform">
-              {{ slot.slotDescription}}
-            </span>
-          </td>
+          <td>{{slot.startDate}}</td>
+          <td>{{slot.endDate}}</td>
+          <td>{{slot.allocationPercentage}}</td>
+          <td>{{slot.slotDescription}}</td>
         </tr>
       </table>
     </div>
@@ -160,6 +227,7 @@
 
 
   <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+
 
 </body>
 </html>
