@@ -53,8 +53,8 @@ app.controller('Ctrl', function($scope, $filter, $http) {
 
     //Get the data
     return $http.post('/saveProject', data).success(function(dataResp, status, headers, config) {
-      if (data.projectID == -1){
-        data.projectID = dataResp.id;
+      if (data.id == -1){
+        data.id = dataResp.projectID;
         $scope.projects.splice(index, 1);
         $scope.projects.push(data);
       }
@@ -334,7 +334,7 @@ app.controller('Ctrl', function($scope, $filter, $http) {
 
         <td style="white-space: nowrap">
           <div class="buttons" ng-show="!rowform.$visible">
-            <button class="btn btn-danger" ng-click="removeProject(project.id,$index)">
+            <button class="btn btn-danger" ng-click="removeProject(project.id,projects.indexOf(project))">
               <span class="glyphicon glyphicon-trash"></span>
             </button>
           </div>

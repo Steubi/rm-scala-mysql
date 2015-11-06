@@ -414,7 +414,7 @@
 		            </td>
 					<td>
 								<!--Resource Name-->
-								{{ resource.firstName || 'empty' }} {{ resource.lastName || 'empty' }}
+								<a href="/resourcePage?resourceID={{resource.resourceID}}">{{ resource.firstName || 'empty' }} {{ resource.lastName || 'empty' }}</a>
 					<td>
 								{{ resource.location || 'empty' }}
 					</td>

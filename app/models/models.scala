@@ -595,6 +595,18 @@ object Vacation {
     }
   }
 
+  /**
+   * Delete a Vacation.
+   *
+   * @param id Id of the BankHoliday to delete.
+   */
+  def delete(id: Int) = {
+    DB.withConnection { implicit connection =>
+      SQL("delete from VACATIONS where ID = {id}").on('id -> id).executeUpdate()
+    }
+  }
+
+
   implicit val vacationWrites = new Writes[Vacation] {
     val format = new java.text.SimpleDateFormat("yyyy-MM-dd")
     def writes(vacation: Vacation) = Json.obj(
@@ -961,7 +973,7 @@ object Project{
    *
    * @param project The project values.
    */
-  def insert(project: Project) = {
+  def insert(project: Project): Integer = {
 
     //Get new ID
     val currentMaxId = DB.withConnection { implicit connection =>
@@ -1003,6 +1015,7 @@ object Project{
         'status -> project.status
       ).executeUpdate()
     }
+    newID
   }
   /**
    * Update a project.

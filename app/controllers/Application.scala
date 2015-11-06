@@ -72,16 +72,16 @@ class Application extends Controller {
     projectResult match {
       case s: JsSuccess[Project] => {
         Logger.debug("Project Object: " + s.value)
-        if (s.value.id == -1){
+        var projectID = s.value.id
+        if (projectID == -1){
           Logger.debug("New project!!!")
-          Project.insert(s.value);
+          projectID = Project.insert(s.value)
         }
         else{
           Logger.debug("Existing project!!!")
-          Project.update(s.value);
+          Project.update(s.value)
         }
-        //Project.insert(s.value);
-        Future(Created)
+        Future(Created(Json.obj("projectID" -> projectID)))
       }
       case e: JsError => {
         Logger.debug("ERROR:" + e.toString)
@@ -359,6 +359,12 @@ class Application extends Controller {
       }
     }
 
+  }
+
+  def deleteVacation = Action.async(parse.json) { request =>
+    val myID = request.body \ "id"
+    Vacation.delete(myID.as[Int])
+    Future(Ok)
   }
 
 

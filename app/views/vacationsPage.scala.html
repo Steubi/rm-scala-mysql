@@ -51,6 +51,7 @@
 
       $scope.newVacation.startDate = yyyy+'-'+mm+'-'+dd;
       $scope.newVacation.endDate = $scope.newVacation.startDate;
+      $scope.newVacation.resourceName = "Not working";
 
     };
 
@@ -70,7 +71,7 @@
 
       //We don't want to save the resourceName, firstName, lastName, location,
       //but they are needed on the server side, so let's put some dummy values
-      data.resourceName = "NA";
+      //data.resourceName = "NAT";
       data.firstName = "NA";
       data.lastName = "NA";
       data.location = "NA";
@@ -83,6 +84,12 @@
           data.id = dataResp.id;
           $scope.vacations.splice(index, 1);
           $scope.vacations.push(data);
+          $scope.initNewVacation(); //Needed if the user does not close the form before entering a new vacation
+          for (resource in $scope.resources){
+            if ($scope.resources[resource].id == data.resourceID){
+              data.resourceName = $scope.resources[resource].name;
+            };
+          };
         }
       }).error(function(dataResp, status, headers, config) {
         // called asynchronously if an error occurs
@@ -91,22 +98,17 @@
       });
     };
 
-    // add bank holiday to table, the saveBankHoliday function will save it on the server
-    $scope.addBankHoliday = function() {
-      $scope.inserted = {id: -1, date:"2025-06-15", name: "", location: "Madrid" };
-      $scope.bankHolidays.push($scope.inserted);
-    };
 
-    // delete bank holiday
-    $scope.deleteBankHoliday = function(pID,index) {
+    // delete a vacation
+    $scope.deleteVacation = function(pID,index) {
       var req = {
         method: 'POST',
-        url: '/deleteBankHoliday',
+        url: '/deleteVacation',
         headers: {'Content-Type': 'application/json'},
         data: {id: pID}
       };
       $http(req).success(function(){
-        $scope.bankHolidays.splice(index, 1);
+        $scope.vacations.splice(index, 1);
       }).error(function(){
         //TODO: Handle error
       });
@@ -235,7 +237,8 @@
         <div class="form-group">
           <label class="col-sm-2 control-label">Resource</label>
           <div class="col-sm-10">
-            <select ng-model="newVacation.resourceID" ng-options="s.id as s.name for s in resources">
+            <select ng-model="newVacation.resourceID" ng-options="s.id as s.name for s in resources">{{newVacation.resourceName = s.name}}
+
             </select>
           </div>
         </div>

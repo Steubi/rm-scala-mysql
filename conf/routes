@@ -32,4 +32,5 @@ POST  /saveBankHoliday            controllers.Application.saveBankHoliday
 POST  /deleteBankHoliday          controllers.Application.deleteBankHoliday
 GET   /getAllVacations            controllers.Application.getAllVacations
 POST  /saveVacation               controllers.Application.saveVacation
-GET   /getResourceDetails            controllers.Application.getResourceDetails(resourceID: Int ?=0)
+POST  /deleteVacation             controllers.Application.deleteVacation
+GET   /getResourceDetails         controllers.Application.getResourceDetails(resourceID: Int ?=0)
